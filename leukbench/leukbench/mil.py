@@ -54,8 +54,13 @@ class _Standardiser:
 
 
 def train_abmil(bags: list[np.ndarray], y: np.ndarray, seed: int = 0, epochs: int = 40, lr: float = 2e-4,
-                weight_decay: float = 1e-3, cell_dropout: float = 0.2, hidden: int = 128, device: str = "cpu"):
-    """Train on a list of bags (raw features). Returns a predict(bags) -> probabilities function."""
+                weight_decay: float = 1e-3, cell_dropout: float = 0.2, hidden: int = 128, device: str = "cpu",
+                monitor: dict | None = None):
+    """Train on a list of bags (raw features). Returns a predict(bags) -> probabilities function.
+
+    monitor: optional {name: (bags, y)} evaluated after every epoch (for learning curves only; never
+    used for model selection). The per-epoch history is attached as predict.history (list of dicts).
+    """
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     std = _Standardiser().fit(np.concatenate(bags))
@@ -64,8 +69,24 @@ def train_abmil(bags: list[np.ndarray], y: np.ndarray, seed: int = 0, epochs: in
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     pos_w = torch.tensor((y == 0).sum() / max((y == 1).sum(), 1), dtype=torch.float32)
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_w)
-    for _ in range(epochs):
+    history = []
+    mon = {k: ([torch.from_numpy(std(b)) for b in bb], np.asarray(yy)) for k, (bb, yy) in (monitor or {}).items()}
+
+    @torch.no_grad()
+    def _evaluate(epoch, train_loss):
+        from sklearn.metrics import roc_auc_score
+        model.eval()
+        rec = {"epoch": epoch, "lr": opt.param_groups[0]["lr"], "train_loss": train_loss}
+        for k, (bb, yy) in mon.items():
+            logits = torch.stack([model(x.to(device))[0] for x in bb]).cpu()
+            rec[f"{k}_loss"] = float(nn.functional.binary_cross_entropy_with_logits(logits, torch.tensor(yy, dtype=torch.float32)))
+            rec[f"{k}_auroc"] = float(roc_auc_score(yy, logits.numpy())) if len(set(yy)) > 1 else float("nan")
+            rec[f"{k}_acc"] = float(((logits.numpy() > 0) == yy).mean())
+        history.append(rec)
+
+    for ep in range(epochs):
         model.train()
+        ep_loss = []
         for i in rng.permutation(len(tb)):
             x = tb[i]
             if cell_dropout and len(x) > 10:                   # bag augmentation
@@ -76,6 +97,9 @@ def train_abmil(bags: list[np.ndarray], y: np.ndarray, seed: int = 0, epochs: in
             opt.zero_grad()
             loss.backward()
             opt.step()
+            ep_loss.append(loss.item())
+        if mon:
+            _evaluate(ep + 1, float(np.mean(ep_loss)))
 
     @torch.no_grad()
     def predict(new_bags, return_attention=False):
@@ -87,4 +111,5 @@ def train_abmil(bags: list[np.ndarray], y: np.ndarray, seed: int = 0, epochs: in
             atts.append(a.cpu().numpy())
         return (np.asarray(ps), atts) if return_attention else np.asarray(ps)
 
+    predict.history = history
     return predict

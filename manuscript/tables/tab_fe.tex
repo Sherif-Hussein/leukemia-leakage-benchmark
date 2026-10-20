@@ -1,0 +1,30 @@
+\begin{table*}[!t]
+\centering
+\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort is scored once. $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}
+\label{tab:fe}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llccccccc}
+\toprule
+Representation & Engineering step & CV AUROC & External AUROC [95\% CI] & $\Delta$ [95\% CI] & Recall (missed) & Spec. & F1 & Oracle spec. \\
+\midrule
+Engineered, all 93 & -- & 0.926 & 0.729 [0.511, 0.924] & -- & 0.58 (5/12) & 0.67 & 0.61 & 0.33 \\
+Engineered & Correlation filter ($|r|>0.9$) & 0.922 & 0.736 [0.529, 0.930] & +0.007 [-0.070, +0.084] & 0.58 (5/12) & 0.67 & 0.61 & 0.42 \\
+Engineered & Per-slide stain normalization & 0.872 & 0.576 [0.329, 0.818] & -0.153 [-0.326, +0.021] & 0.67 (4/12) & 0.50 & 0.62 & 0.08 \\
+Engineered & L1 (LASSO) selection & 0.898 & 0.590 [0.350, 0.820] & -0.139 [-0.274, -0.023]* & 0.75 (3/12) & 0.42 & 0.64 & 0.17 \\
+Engineered & Filter + stain normalization & 0.869 & 0.569 [0.322, 0.798] & -0.160 [-0.333, +0.009] & 0.67 (4/12) & 0.50 & 0.62 & 0.08 \\
+\midrule
+EfficientNet-B0, 1,280-d & -- & 0.957 & 0.743 [0.538, 0.926] & -- & 0.50 (6/12) & 0.67 & 0.55 & 0.42 \\
+EfficientNet-B0 & PCA, 16 components & 0.909 & 0.792 [0.580, 0.963] & +0.049 [-0.096, +0.213] & 0.92 (1/12) & 0.67 & 0.81 & 0.42 \\
+EfficientNet-B0 & PCA, 32 components & 0.958 & 0.833 [0.644, 0.972] & +0.090 [-0.014, +0.210] & 0.50 (6/12) & 0.92 & 0.63 & 0.42 \\
+EfficientNet-B0$^{\star}$ & PCA, 64 components & 0.966 & 0.819 [0.604, 1.000] & +0.076 [-0.171, +0.324] & 0.50 (6/12) & 0.92 & 0.63 & 0.00 \\
+\midrule
+Fusion & Filter + PCA-32 & 0.960 & 0.764 [0.566, 0.938] & +0.021 [-0.105, +0.140] & 0.58 (5/12) & 0.83 & 0.67 & 0.42 \\
+Digital differential & 8 predicted cell classes & 0.852 & 0.785 [0.570, 0.953] & +0.056 [-0.104, +0.229] & 1.00 (0/12) & 0.33 & 0.75 & 0.50 \\
+Differential + engineered & Filtered & 0.928 & 0.764 [0.562, 0.943] & +0.035 [-0.015, +0.111] & 0.58 (5/12) & 0.67 & 0.61 & 0.50 \\
+Engineered, attention MIL & Filter + stain normalization & 0.922 & 0.569 [0.326, 0.793] & -0.160 [-0.422, +0.091] & 0.42 (7/12) & 0.75 & 0.50 & 0.17 \\
+EfficientNet-B0, attention MIL & PCA-32 & 0.924 & 0.799 [0.580, 0.972] & +0.069 [-0.133, +0.281] & 0.50 (6/12) & 0.75 & 0.57 & 0.50 \\
+\bottomrule
+\multicolumn{9}{l}{\footnotesize Recall, specificity and F1 at the operating point fixed on Discovery (target sensitivity 0.95). * $p<0.05$.}
+\end{tabular}}
+\end{table*}

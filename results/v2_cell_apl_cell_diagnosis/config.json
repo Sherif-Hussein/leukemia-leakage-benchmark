@@ -1,0 +1,35 @@
+{
+  "manifest": "manifests/apl_aml.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "task": "apl_cell_diagnosis",
+  "features": [
+    "hand=features/apl_aml_hand.parquet",
+    "effnet=features/apl_aml_effnet.npy"
+  ],
+  "models": [
+    "M1=hand:lgbm",
+    "M1lr=hand:lr",
+    "M2=effnet:lr",
+    "M4=hand+effnet:lr"
+  ],
+  "splits": [
+    "image",
+    "grouped"
+  ],
+  "folds": 5,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "cv_where": [
+    "cohort=Discovery"
+  ],
+  "test_where": [
+    "cohort=Validation"
+  ],
+  "threshold": "sens95",
+  "max_train_cells": 0,
+  "n_boot": 1000,
+  "out": "results/v2_cell_apl_cell_diagnosis"
+}

@@ -267,8 +267,12 @@ pd.set_option("display.width", 220)
 print(leak.round(3).to_string()); print(pt.round(3).to_string()); print(bl.round(3).to_string()); print(tests.round(3).to_string())
 
 # ================================================================== feature engineering (patient level)
-fe = pd.read_csv(R / "feature_engineering" / "feature_engineering.csv")
-fp_ = pd.read_csv(R / "feature_engineering" / "predictions.csv")
+fe_parts = [d for d in ["feature_engineering", "feature_engineering_part2"] if (R / d / "feature_engineering.csv").exists()]
+fe = pd.concat([pd.read_csv(R / d / "feature_engineering.csv") for d in fe_parts], ignore_index=True).drop_duplicates("config", keep="last")
+fp_ = pd.concat([pd.read_csv(R / d / "predictions.csv") for d in fe_parts], ignore_index=True).drop_duplicates(["config", "patient_id"], keep="last")
+order = ["eng_raw", "eng_corrfilter", "eng_slidenorm", "eng_l1", "eng_stable", "eff_raw", "eff_pca16", "eff_pca32", "eff_pca64",
+         "fusion_pca32", "composition", "composition+eng", "mil_eng_stable", "mil_eff_pca32"]
+fe = fe.set_index("config").loc[[c for c in order if c in set(fe.config)]].reset_index()
 NICE = {"eng_raw": ("Engineered, all 93", "--"), "eng_corrfilter": ("Engineered", "Correlation filter ($|r|>0.9$)"),
         "eng_slidenorm": ("Engineered", "Per-slide stain normalization"), "eng_l1": ("Engineered", "L1 (LASSO) selection"),
         "eng_stable": ("Engineered", "Filter + stain normalization"), "eff_raw": ("EfficientNet-B0, 1,280-d", "--"),
@@ -289,10 +293,10 @@ fe[["delta", "dlo", "dhi", "dp"]] = dl
 fe.to_csv(TAB / "feature_engineering.csv", index=False)
 facts["feature_engineering"] = fe.round(4).to_dict("records")
 sel = fe.loc[fe.cv_auroc.idxmax()]
-facts["fe_selected"] = sel.round(4).to_dict()
+facts["fe_selected"] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) else v) for k, v in sel.to_dict().items()}
 L = [r"\begin{table*}[!t]", r"\centering",
      r"\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort is scored once. $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}",
-     r"\label{tab:fe}", r"\setlength{\tabcolsep}{3pt}", r"\begin{tabular}{llccccccc}", r"\toprule",
+     r"\label{tab:fe}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
      r"Representation & Engineering step & CV AUROC & External AUROC [95\% CI] & $\Delta$ [95\% CI] & Recall (missed) & Spec. & F1 & Oracle spec. \\", r"\midrule"]
 for i, r in enumerate(fe.itertuples()):
     rep, step = NICE[r.config]
@@ -301,7 +305,132 @@ for i, r in enumerate(fe.itertuples()):
     L.append(f"{rep}{star} & {step} & {r.cv_auroc:.3f} & {ci(r.ext_auroc, r.ext_lo, r.ext_hi)} & {d} & {r.sens95_sens:.2f} ({int(r.sens95_fn)}/12) & {r.sens95_spec:.2f} & {r.sens95_f1:.2f} & {r.oracle_spec_at_recall1:.2f} \\\\")
     if r.config in ("eng_stable", "eff_pca64"):
         L.append(r"\midrule")
-L += [r"\bottomrule", r"\multicolumn{9}{l}{\footnotesize Recall, specificity and F1 at the operating point fixed on Discovery (target sensitivity 0.95). * $p<0.05$.}", r"\end{tabular}", r"\end{table*}"]
+L += [r"\bottomrule", r"\multicolumn{9}{l}{\footnotesize Recall, specificity and F1 at the operating point fixed on Discovery (target sensitivity 0.95). * $p<0.05$.}", r"\end{tabular}}", r"\end{table*}"]
 (TAB / "tab_fe.tex").write_text("\n".join(L))
 (TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))
 print(fe[["config", "cv_auroc", "ext_auroc", "delta", "dlo", "dhi", "dp", "sens95_sens", "sens95_spec", "oracle_spec_at_recall1"]].round(3).to_string())
+
+# ================================================================== PCA: before / after and why (sensitivity analysis over k)
+pca_parts = [d for d in ["feature_engineering", "feature_engineering_pca"] if (R / d / "feature_engineering.csv").exists()]
+if (R / "pca_analysis" / "pca_analysis.csv").exists() and "feature_engineering_pca" in pca_parts:
+    pk = pd.concat([pd.read_csv(R / d / "feature_engineering.csv") for d in pca_parts], ignore_index=True).drop_duplicates("config", keep="last")
+    pkp = pd.concat([pd.read_csv(R / d / "predictions.csv") for d in pca_parts], ignore_index=True).drop_duplicates(["config", "patient_id"], keep="last")
+    pk = pk[pk.config.str.match(r"eff_(raw|pca\d+)$")].copy()
+    pk["k"] = pk.config.map(lambda c: 1280 if c == "eff_raw" else int(c[7:]))
+    pk = pk.sort_values("k").reset_index(drop=True)
+    diag = pd.read_csv(R / "pca_analysis" / "pca_analysis.csv")
+    pk = pk.merge(diag[["k", "explained_var", "cohort_id_auroc", "cell_apl_auroc_external"]], on="k", how="left")
+    Pk = lambda c: pkp[pkp.config == c].sort_values("patient_id")
+    dl = []
+    for r in pk.itertuples():
+        if r.config == "eff_raw":
+            dl.append((np.nan,) * 4); continue
+        d = paired_bootstrap_auc(Pk(r.config).y.values, Pk(r.config).p.values, Pk("eff_raw").p.values, Pk(r.config).patient_id.values, 4000)
+        dl.append((d["delta"], d["lo"], d["hi"], d["p"]))
+    pk[["delta", "dlo", "dhi", "dp"]] = dl
+    pk["inputs"] = 5 * pk.k
+    pk["gap"] = pk.cv_auroc - pk.ext_auroc
+    pk.to_csv(TAB / "pca_sweep.csv", index=False)
+    facts["pca_sweep"] = pk.round(4).to_dict("records")
+    order_k = [1280] + [k for k in pk.k if k != 1280]
+    L = [r"\begin{table*}[!t]", r"\centering",
+         r"\caption{Patient-level APL detection before and after PCA of the EfficientNet-B0 embeddings (pooled-statistics LR). PCA is fitted on the training cells of each Discovery fold. Inputs: number of patient-level features (five statistics per component) for about 66 training patients per fold. Cohort ID: AUROC for telling Validation from Discovery AML cells (0.5 = no acquisition signal). Cell APL: external cell-level AUROC of a cell classifier. $\Delta$: change in external AUROC relative to the unreduced embedding (paired patient bootstrap, 4,000 resamples). Components 16, 32 and 64 were specified in advance; the others form a post hoc sensitivity analysis.}",
+         r"\label{tab:pca}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{rrrccccccccc}", r"\toprule",
+         r" & & & \multicolumn{2}{c}{Cell level} & \multicolumn{4}{c}{Patient level, AUROC} & \multicolumn{3}{c}{External, fixed operating point} \\",
+         r"\cmidrule(lr){4-5}\cmidrule(lr){6-9}\cmidrule(lr){10-12}",
+         r"Components & Var. & Inputs & Cohort ID & Cell APL & CV & External [95\% CI] & Gap & $\Delta$ [95\% CI] & Recall (missed) & Spec. & F1 \\", r"\midrule"]
+    for k in order_k:
+        r = pk[pk.k == k].iloc[0]
+        lab = "None (1,280)" if k == 1280 else str(k)
+        d = "--" if np.isnan(r.delta) else f"{r.delta:+.3f} [{r.dlo:+.3f}, {r.dhi:+.3f}]" + ("*" if r.dp < 0.05 else "")
+        best = r.config == "eff_pca32"
+        ext = ci(r.ext_auroc, r.ext_lo, r.ext_hi)
+        L.append(f"{lab} & {r.explained_var:.2f} & {int(r.inputs):,} & {r.cohort_id_auroc:.3f} & {r.cell_apl_auroc_external:.3f} & {r.cv_auroc:.3f} & "
+                 + (rf"\textbf{{{ext}}}" if best else ext) + f" & {r.gap:.3f} & {d} & {r.sens95_sens:.2f} ({int(r.sens95_fn)}/12) & {r.sens95_spec:.2f} & {r.sens95_f1:.2f} \\\\")
+        if k == 1280:
+            L.append(r"\midrule")
+    L += [r"\bottomrule", r"\multicolumn{12}{l}{\footnotesize Var.: cumulative explained variance on Discovery cells. Gap: CV AUROC minus external AUROC. * $p<0.05$.}", r"\end{tabular}}", r"\end{table*}"]
+    (TAB / "tab_pca.tex").write_text("\n".join(L))
+
+    fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.3))
+    s = pk[pk.k != 1280]; raw = pk[pk.k == 1280].iloc[0]
+    a0 = ax[0]
+    a0.axvspan(13, 76, color="#F2F6FB", lw=0, zorder=0)
+    a0.plot(s.k, s.cv_auroc, "o-", color=GREY, ms=3.5, label="Discovery CV")
+    a0.plot(s.k, s.ext_auroc, "o-", color=BLUE, ms=3.5, label="External (Validation)")
+    a0.fill_between(s.k, s.ext_lo, s.ext_hi, color=BLUE, alpha=0.12, lw=0)
+    a0.axhline(raw.ext_auroc, color=BLUE, ls="--", lw=0.9); a0.axhline(raw.cv_auroc, color=GREY, ls="--", lw=0.9)
+    a0.text(4.2, raw.ext_auroc + 0.012, "no PCA (external)", color=BLUE, fontsize=6.5)
+    a0.set_xscale("log", base=2); a0.set_xticks(s.k); a0.set_xticklabels(s.k)
+    a0.set_xlabel("PCA components"); a0.set_ylabel("Patient-level AUROC"); a0.set_ylim(0.2, 1.02)
+    a0.legend(frameon=False, loc="lower right", fontsize=6.5); a0.set_title("(a) Patient-level APL detection", loc="left", fontsize=8)
+    a1 = ax[1]
+    a1.plot(s.k, s.gap, "o-", color=ORANGE, ms=3.5)
+    a1.axhline(raw.gap, color=ORANGE, ls="--", lw=0.9); a1.text(40, raw.gap + 0.008, "no PCA", color=ORANGE, fontsize=6.5)
+    a1b = a1.twinx(); a1b.spines["top"].set_visible(False)
+    a1b.bar(s.k, s.inputs / 65.6, width=s.k * 0.35, color=GREY, alpha=0.35)
+    a1b.axhline(1, color=GREY, lw=0.6, ls=":"); a1b.set_ylabel("Inputs per training patient", color=GREY, fontsize=6.8); a1b.set_yscale("log")
+    a1.set_zorder(a1b.get_zorder() + 1); a1.patch.set_visible(False)
+    a1.set_xscale("log", base=2); a1.set_xticks(s.k); a1.set_xticklabels(s.k)
+    a1.set_xlabel("PCA components"); a1.set_ylabel("CV $-$ external AUROC", color=ORANGE)
+    a1.set_title("(b) Generalization gap and model size", loc="left", fontsize=8)
+    a2 = ax[2]
+    a2.plot(s.k, s.cell_apl_auroc_external, "o-", color=GREEN, ms=3.5, label="APL signal (cell AUROC)")
+    a2.plot(s.k, s.cohort_id_auroc, "o-", color=RED, ms=3.5, label="Cohort signal (cohort-ID AUROC)")
+    a2.plot(s.k, s.explained_var, "s--", color=GREY, ms=3, lw=0.9, label="Explained variance")
+    a2.axhline(raw.cell_apl_auroc_external, color=GREEN, ls=":", lw=0.9); a2.axhline(raw.cohort_id_auroc, color=RED, ls=":", lw=0.9)
+    a2.set_xscale("log", base=2); a2.set_xticks(s.k); a2.set_xticklabels(s.k); a2.set_ylim(0.2, 1.08)
+    a2.set_xlabel("PCA components"); a2.legend(frameon=False, fontsize=6.2, loc="upper left")
+    a2.set_title("(c) What the components keep", loc="left", fontsize=8)
+    fig.tight_layout(); fig.savefig(OUT / "figures" / "fig_pca.pdf"); fig.savefig(OUT / "figures" / "fig_pca.png", dpi=200); plt.close(fig)
+    print(pk[["config", "explained_var", "inputs", "cohort_id_auroc", "cell_apl_auroc_external", "cv_auroc", "ext_auroc", "gap", "delta", "dlo", "dhi", "dp", "sens95_sens", "sens95_fn", "sens95_spec"]].round(3).to_string())
+
+# ================================================================== training dynamics (learning / loss curves)
+TC = R / "training_curves"
+if (TC / "abmil_history.csv").exists() and (TC / "lgbm_history.csv").exists() and (TC / "sample_size_curve.csv").exists():
+    ah = pd.read_csv(TC / "abmil_history.csv"); lh = pd.read_csv(TC / "lgbm_history.csv"); sz = pd.read_csv(TC / "sample_size_curve.csv")
+    INP = {"eng": ("Engineered (93)", GREEN), "eff_raw": ("EfficientNet-B0 (1,280)", GREY), "eff_pca32": ("EfficientNet-B0 + PCA-32", BLUE)}
+    fig, ax = plt.subplots(2, 3, figsize=(7.16, 4.4))
+    band = lambda a, x, m, s, c, **kw: (a.plot(x, m, color=c, **kw), a.fill_between(x, m - s, m + s, color=c, alpha=0.10, lw=0))
+    for inp, (nm, c) in INP.items():
+        g = ah[ah.input == inp].groupby("epoch")
+        band(ax[0, 0], g.train_loss.mean().index, g.train_loss.mean(), g.train_loss.std(), c, label=nm, lw=1.2)
+        band(ax[0, 1], g.val_loss.mean().index, g.val_loss.mean(), g.val_loss.std(), c, lw=1.2)
+        e = g.val_loss.mean().idxmin(); ax[0, 1].plot([e], [g.val_loss.mean()[e]], "v", color=c, ms=5, mec="white", mew=0.5)
+        band(ax[0, 2], g.val_auroc.mean().index, g.val_auroc.mean(), g.val_auroc.std(), c, lw=1.2)
+    ax[0, 0].set_title("(a) MIL: training loss", loc="left", fontsize=8); ax[0, 0].set_ylabel("Weighted BCE loss")
+    ax[0, 1].set_title("(b) MIL: held-out fold loss", loc="left", fontsize=8); ax[0, 1].set_ylabel("BCE loss")
+    ax[0, 2].set_title("(c) MIL: held-out fold AUROC", loc="left", fontsize=8); ax[0, 2].set_ylabel("AUROC"); ax[0, 2].set_ylim(0.5, 1.0)
+    ax[0, 0].legend(frameon=False, fontsize=6.3)
+    for a in ax[0]:
+        a.set_xlabel("Epoch")
+    g = lh.groupby("round")
+    band(ax[1, 0], g.train_loss.mean().index, g.train_loss.mean(), g.train_loss.std(), ORANGE, label="Training folds", lw=1.2)
+    band(ax[1, 0], g.val_loss.mean().index, g.val_loss.mean(), g.val_loss.std(), BLUE, label="Held-out patients", lw=1.2)
+    e = g.val_loss.mean().idxmin(); ax[1, 0].plot([e], [g.val_loss.mean()[e]], "v", color=BLUE, ms=5, mec="white", mew=0.5)
+    ax[1, 0].set_xlabel("Boosting round"); ax[1, 0].set_ylabel("Log-loss"); ax[1, 0].legend(frameon=False, fontsize=6.3)
+    ax[1, 0].set_title("(d) LightGBM (T1, cells): loss", loc="left", fontsize=8)
+    for inp, (nm, c) in INP.items():
+        q = sz[sz.input == inp].copy()
+        q["n"] = q.n_train.where(q.n_train < 60, q.n_train.max())
+        m = q.groupby("n").agg(cv=("cv_auroc", "mean"), cvs=("cv_auroc", "std"), ex=("ext_auroc", "mean"), exs=("ext_auroc", "std"), tr=("train_auroc", "mean"))
+        band(ax[1, 1], m.index.values, m.cv.values, m.cvs.values, c, lw=1.2, marker="o", ms=3, label=nm)
+        band(ax[1, 2], m.index.values, m.ex.values, m.exs.values, c, lw=1.2, marker="o", ms=3, label=nm)
+        ax[1, 1].plot(m.index.values, m.tr.values, color=c, lw=0.8, ls=":")
+    ax[1, 1].set_title("(e) Learning curve: held-out fold", loc="left", fontsize=8); ax[1, 1].set_ylabel("AUROC (dotted: training)")
+    ax[1, 2].set_title("(f) Learning curve: external cohort", loc="left", fontsize=8); ax[1, 2].set_ylabel("AUROC"); ax[1, 2].legend(frameon=False, fontsize=6.3, loc="lower right")
+    for a in ax[1, 1:]:
+        a.set_xlabel("Training patients (pooled LR)"); a.set_ylim(0.4, 1.02)
+    fig.tight_layout(); fig.savefig(OUT / "figures" / "fig_training.pdf"); fig.savefig(OUT / "figures" / "fig_training.png", dpi=200); plt.close(fig)
+    last = ah[ah.epoch == ah.epoch.max()].groupby("input")[["train_loss", "val_loss", "val_auroc"]].mean()
+    best = ah.groupby(["input", "epoch"]).val_loss.mean().groupby("input").agg(["idxmin", "min"])
+    au10 = ah[ah.epoch == 10].groupby("input").val_auroc.mean()
+    lg = lh.groupby("round")[["train_loss", "val_loss", "val_auroc"]].mean()
+    szs = sz.groupby(["input", "n_train"])[["train_auroc", "cv_auroc", "ext_auroc"]].mean().reset_index()
+    facts["training"] = dict(abmil_last=last.round(4).to_dict(), abmil_best_epoch={k: int(v[1]) for k, v in best["idxmin"].items()},
+                             abmil_best_val_loss=best["min"].round(4).to_dict(), abmil_auroc_epoch10=au10.round(4).to_dict(),
+                             lgbm_best_round=int(lg.val_loss.idxmin()), lgbm_min_val_loss=round(float(lg.val_loss.min()), 4),
+                             lgbm_last=lg.iloc[-1].round(4).to_dict(), lgbm_first=lg.iloc[0].round(4).to_dict(),
+                             size=szs.round(4).to_dict("records"))
+    print(json.dumps(facts["training"], indent=1, default=float)[:3000])
+(TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))

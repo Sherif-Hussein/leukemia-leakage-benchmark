@@ -44,8 +44,14 @@ Experiments (each writes to `results/<name>/`; exact commands are in each `confi
 | Exploratory data analysis | `run_eda.py` |
 | Feature engineering (PCA, selection, composition, normalization) | `run_feature_engineering.py` |
 | Feature-group ablation and calibration | `run_ablation.py` |
+| PCA diagnostics (explained variance, cohort identifiability, cell-level signal per k) | `run_pca_analysis.py` |
+| Training dynamics: MIL loss/AUROC per epoch, LightGBM loss per round, sample-size learning curves | `run_training_curves.py` |
 
-Tables and figures: `cd manuscript && python make_results.py && python make_fig_eda.py`, then compile with
+**Every setting of every component** (preprocessing, features, PCA, classifiers, optimizer, learning rate,
+epochs, thresholds, bootstrap) and the exact command for each result folder are documented in
+[`leukbench/docs/SETTINGS.md`](leukbench/docs/SETTINGS.md).
+
+Tables and figures: `cd manuscript && LEUKBENCH_WORK=.. python make_results.py && python make_fig_eda.py`, then compile with
 `pdflatex main && bibtex main && pdflatex main && pdflatex main` (or upload `manuscript/` to Overleaf).
 
 ## Evaluation principles

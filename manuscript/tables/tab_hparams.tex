@@ -1,0 +1,54 @@
+\begin{table*}[!t]
+\centering
+\caption{Complete settings of every component. All values were fixed before the Validation cohort was scored; none was tuned on it. Defaults of the named libraries apply to anything not listed.}
+\label{tab:hparams}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.05}
+\footnotesize
+\begin{tabular}{p{3.0cm}p{5.6cm}p{8.3cm}}
+\toprule
+Component & Setting & Value \\
+\midrule
+\multirow{4}{3.0cm}{Data and splits} & Development / external cohorts & Discovery (82 patients) / Validation (24 patients), split by diagnosis date by the data owners \\
+ & Cross-validation & 5 folds; image-level \texttt{StratifiedKFold} or patient-level \texttt{StratifiedGroupKFold} (cells), \texttt{StratifiedKFold} over patients (T3) \\
+ & Random seeds & 0, 1, 2 (fold assignment, cell sampling, model initialization); results are averaged over seeds \\
+ & Cells per patient (T3) & Up to 500, sampled at random once (seed 0); patients with fewer cells keep all \\
+\midrule
+\multirow{6}{3.0cm}{Engineered features (93)} & Input & RGB, bilinear resize to $192\times192$ \\
+ & Color deconvolution & Ruifrok--Johnston H\&E matrix (\texttt{skimage rgb2hed}) \\
+ & Nucleus & Gaussian smoothing ($\sigma=1$) of hematoxylin, Otsu threshold, opening (disk 2), component nearest the center (within $0.30\times$ image size); fallback: darkest 15\% of gray levels \\
+ & Cytoplasm proxies & Basophilic region: blue-dominant pixels within one nuclear radius, opening (disk 2), closing (disk 4); ring: 2--9 px from the nucleus, excluding pixels brighter than the 90th lightness percentile $-3$ \\
+ & Texture & GLCM on 33 gray levels, distances 1, 2, 4 px, angles $0,\pi/4,\pi/2,3\pi/4$ (contrast, dissimilarity, homogeneity, energy, correlation; averaged over angles); uniform LBP with $(P,R)=(8,1)$ and $(16,2)$ \\
+ & Missing values & Unreadable images give NaN rows, imputed with the training-fold median \\
+\midrule
+\multirow{3}{3.0cm}{Deep features} & Encoder & EfficientNet-B0, ImageNet weights (\texttt{timm}), frozen, global-average-pooled 1,280-d output \\
+ & Input & Bicubic resize to $224\times224$, ImageNet mean/std normalization, no augmentation \\
+ & Extraction & Batch size 64, 2 data-loader workers, CPU, \texttt{torch.no\_grad} \\
+\midrule
+\multirow{3}{3.0cm}{Feature engineering} & PCA & Standardization then PCA (\texttt{svd\_solver}=auto, \texttt{random\_state}=0), both fitted on training-fold cells only; 16, 32, 64 components pre-specified; 4, 8, 128, 256 as sensitivity analysis \\
+ & Correlation filter & Drop the later feature of every pair with $|r|>0.9$ (training cells, $\le$20,000 sampled) \\
+ & Stain normalization / L1 & Per-slide median/SD standardization of the 26 stain features; L1-penalized LR, $C=0.5$, SAGA solver \\
+\midrule
+\multirow{3}{3.0cm}{Cell-level classifiers (T1, T2)} & Logistic regression & L2, $C=0.1$, L-BFGS, 3,000 iterations, class-balanced weights; median imputation and standardization inside the pipeline \\
+ & LightGBM & 400 trees, learning rate 0.05, 31 leaves, row subsampling 0.8 (every iteration), column subsampling 0.8, class-balanced weights, 2 threads \\
+ & Calibration & Temperature scaling fitted on an inner 80/20 split of the training fold (bounded search 0.05--20) \\
+\midrule
+\multirow{2}{3.0cm}{Pooled patient model (T3)} & Patient vector & Mean, SD, 10th, 50th, 90th percentile of every cell feature ($5\times$ dimensions) \\
+ & Classifier & LR, L2, $C=0.1$, 5,000 iterations, class-balanced weights, standardization inside the pipeline \\
+\midrule
+\multirow{5}{3.0cm}{Gated attention MIL (T3)} & Architecture & Linear($d\to128$)--ReLU--Dropout(0.25); gated attention with $\tanh$ and sigmoid branches of 64 units; linear classifier on the attention-weighted mean \\
+ & Optimization & AdamW, learning rate $2\times10^{-4}$ (constant, no schedule), weight decay $10^{-3}$, one bag per step, 40 epochs, no early stopping \\
+ & Loss & Binary cross-entropy with positive-class weight $n_{\mathrm{AML}}/n_{\mathrm{APL}}$ of the training fold \\
+ & Augmentation & Random removal of 20\% of a bag's cells at every step (bags with more than 10 cells) \\
+ & Input scaling & Median imputation and standardization from training-fold cells \\
+\midrule
+\multirow{2}{3.0cm}{Re-run baselines} & B1, B2 & Promyelocyte fraction (ranked directly); LR on the 17-class differential count \\
+ & B3 & EfficientNet-B0 + RBF-SVM ($C=1$, $\gamma$ = \texttt{scale}, Platt probabilities, class-balanced, 8,000 training cells), cell scores averaged per patient \\
+\midrule
+\multirow{4}{3.0cm}{Operating point and statistics} & Threshold & Highest threshold giving sensitivity $\ge0.95$ on out-of-fold Discovery predictions; Youden threshold reported for reference \\
+ & External prediction (T3) & Mean of the 15 fold models (5 folds $\times$ 3 seeds) \\
+ & Confidence intervals & Patient-level bootstrap, 2,000 resamples (1,000 for cell-level CV); paired differences 4,000 resamples \\
+ & Calibration error & ECE with 15 equal-width bins \\
+\bottomrule
+\end{tabular}
+\end{table*}
