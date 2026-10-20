@@ -1,0 +1,94 @@
+feature,group,gain
+nuc_area,Nuclear shape,0.27772260151313033
+granule_area,Nucleoli and granules,0.09084174391459397
+nucleoli_area,Nucleoli and granules,0.03619242141351724
+granule_count,Nucleoli and granules,0.02999536811376767
+glcm_contrast_d4,"Chromatin texture (GLCM, entropy)",0.02650338365628276
+H_ratio_nuc_cyto,Stain and colour,0.026288414696139354
+bcell_area,Basophilic region,0.024090049629029938
+nuc_E_std,Stain and colour,0.023115752593780455
+L_diff_nuc_cyto,Stain and colour,0.016524793800196357
+lbp_P16R2_8,Local binary patterns,0.01493799248124353
+nc_ratio_basophilic,Basophilic region,0.014027045335811806
+cyto_L_std,Stain and colour,0.013992001680644336
+nuc_L_std,Stain and colour,0.013842235371035322
+lbp_P8R1_0,Local binary patterns,0.013104776286636357
+nuc_H_std,Stain and colour,0.012718759006842212
+cyto_L_mean,Stain and colour,0.011872410966312101
+nuc_H_mean,Stain and colour,0.011640342177101725
+bcell_circularity,Basophilic region,0.011534917339992998
+cyto_sat_mean,Stain and colour,0.011156550858956008
+nuc_sat_std,Stain and colour,0.011137748788220339
+nuc_a_std,Stain and colour,0.01088124213903866
+glcm_dissimilarity_d4,"Chromatin texture (GLCM, entropy)",0.009983211191547098
+nuc_E_mean,Stain and colour,0.009097635650330407
+basophilic_rim,Basophilic region,0.008884917230363266
+cyto_sat_std,Stain and colour,0.008853262953678559
+nuc_b_mean,Stain and colour,0.008824451812352467
+bcell_solidity,Basophilic region,0.008737644987817286
+lbp_P8R1_9,Local binary patterns,0.00760950964460671
+cyto_b_mean,Stain and colour,0.007088994469026897
+nuc_L_mean,Stain and colour,0.007020518442371513
+cyto_E_std,Stain and colour,0.006927337857730254
+lbp_P8R1_5,Local binary patterns,0.006767698118923041
+glcm_correlation_d4,"Chromatin texture (GLCM, entropy)",0.006632857693806975
+lbp_P16R2_4,Local binary patterns,0.006628177313504936
+cyto_b_std,Stain and colour,0.006029431986011507
+lbp_P16R2_6,Local binary patterns,0.00597418305996771
+lbp_P16R2_16,Local binary patterns,0.00590377126846606
+glcm_homogeneity_d4,"Chromatin texture (GLCM, entropy)",0.005848924229012281
+lbp_P8R1_8,Local binary patterns,0.005574113969614018
+nuc_major_axis,Nuclear shape,0.005276616616669734
+cyto_H_std,Stain and colour,0.005110159049006857
+lbp_P8R1_4,Local binary patterns,0.005088031869098203
+cyto_H_mean,Stain and colour,0.00508372552620572
+cyto_a_mean,Stain and colour,0.005052840963100539
+nuc_sat_mean,Stain and colour,0.004923469603054987
+lbp_P8R1_7,Local binary patterns,0.004879837833104569
+bcell_perimeter,Basophilic region,0.004767512992436806
+lbp_P8R1_3,Local binary patterns,0.004750514683183831
+nuc_a_mean,Stain and colour,0.004733821786198851
+nuc_entropy,"Chromatin texture (GLCM, entropy)",0.00451397059160733
+lbp_P8R1_1,Local binary patterns,0.004229130783991758
+cyto_E_mean,Stain and colour,0.00418951529126517
+nucleoli_count,Nucleoli and granules,0.0040468949425138
+nuc_b_std,Stain and colour,0.003918914423114095
+lbp_P8R1_2,Local binary patterns,0.003914992569413956
+lbp_P16R2_2,Local binary patterns,0.003792744606701204
+lbp_P16R2_3,Local binary patterns,0.003771673994108871
+lbp_P16R2_1,Local binary patterns,0.0036838196361418086
+lbp_P16R2_13,Local binary patterns,0.00351464642254569
+nuc_solidity,Nuclear shape,0.003383115531223282
+bcell_extent,Basophilic region,0.0033643563474855874
+bcell_major_axis,Basophilic region,0.003303447223737535
+lbp_P16R2_0,Local binary patterns,0.0031801290962404074
+glcm_dissimilarity_d2,"Chromatin texture (GLCM, entropy)",0.00316881682750172
+lbp_P16R2_12,Local binary patterns,0.003148696495187035
+lbp_P8R1_6,Local binary patterns,0.003011144458222953
+glcm_contrast_d1,"Chromatin texture (GLCM, entropy)",0.002829379062546199
+lbp_P16R2_5,Local binary patterns,0.0027809961680518784
+nuc_circularity,Nuclear shape,0.0027773231221509364
+glcm_correlation_d1,"Chromatin texture (GLCM, entropy)",0.002731838871174137
+glcm_correlation_d2,"Chromatin texture (GLCM, entropy)",0.0026601322747614627
+glcm_homogeneity_d1,"Chromatin texture (GLCM, entropy)",0.0024621246487881946
+cyto_a_std,Stain and colour,0.0024472556456083807
+lbp_P16R2_11,Local binary patterns,0.002312323122872122
+glcm_energy_d4,"Chromatin texture (GLCM, entropy)",0.0022670446135619753
+lbp_P16R2_17,Local binary patterns,0.0022473716759234606
+lbp_P16R2_10,Local binary patterns,0.0022199591420628342
+glcm_contrast_d2,"Chromatin texture (GLCM, entropy)",0.0022085570888008303
+lbp_P16R2_14,Local binary patterns,0.002198434672352652
+lbp_P16R2_15,Local binary patterns,0.0021895709214831784
+glcm_energy_d1,"Chromatin texture (GLCM, entropy)",0.0020691022232449045
+lbp_P16R2_7,Local binary patterns,0.0019404358878546688
+glcm_homogeneity_d2,"Chromatin texture (GLCM, entropy)",0.001918155718169105
+nuc_perimeter,Nuclear shape,0.001824507176795961
+nuc_extent,Nuclear shape,0.0017072019119034382
+lbp_P16R2_9,Local binary patterns,0.00169928514447661
+nuc_eccentricity,Nuclear shape,0.001655615594049267
+glcm_energy_d2,"Chromatin texture (GLCM, entropy)",0.001302168374610827
+bcell_eccentricity,Basophilic region,0.001231900665170566
+glcm_dissimilarity_d1,"Chromatin texture (GLCM, entropy)",0.0011931476434217743
+bcell_axis_ratio,Basophilic region,0.001122665473694615
+nuc_axis_ratio,Nuclear shape,0.0010119444679969017
+nuc_fragments,Nuclear shape,0.0006818248840063585

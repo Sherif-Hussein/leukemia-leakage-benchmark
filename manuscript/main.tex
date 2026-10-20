@@ -1,0 +1,306 @@
+\documentclass[journal]{IEEEtran}
+% IEEE Transactions journal format (IEEEtran.cls v1.8b). Compile: pdflatex, bibtex, pdflatex, pdflatex.
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{figures/}}
+\hyphenation{Dino-Bloom Efficient-Net cyto-morphology}
+\newcommand{\Ccontrib}[1]{\textsf{C#1}}
+
+\begin{document}
+
+\title{Beyond 100\% Accuracy: Leakage-Aware, Sensitivity-First Evaluation of Engineered and Deep Features for Leukemia Detection in Blood Smears}
+
+\author{Sherif~Ibrahem% <-- complete author list and affiliations
+\thanks{Manuscript received XX; revised XX. (Corresponding author: Sherif Ibrahem.)}%
+\thanks{S. Ibrahem is with the Department of Biomedical Engineering, [Institution], [City], Egypt (e-mail: sherif.ibrahem@mimocodes.com).}}
+
+\markboth{IEEE Transactions on [Journal Name], Vol.~XX, No.~XX, 2026}%
+{Ibrahem: Leakage-Aware, Sensitivity-First Evaluation of Leukemia Detection}
+
+\maketitle
+
+\begin{abstract}
+Deep-learning models for leukemia detection in blood smears often report 97--100\% accuracy, yet they are rarely used in practice. We examined how much of this performance survives honest evaluation, using a public cohort of 106 patients with acute myeloid leukemia (34 with acute promyelocytic leukemia, APL; 25,724 cell images) split by date into development and later validation cohorts. With identical data and classifiers, splitting cells instead of patients inflated the area under the ROC curve (AUROC) by 0.25--0.32 when cells carried the patient's diagnosis, but by at most 0.04 when the label described the cell itself. Exploratory analysis showed that stain and color features shifted between cohorts enough to identify them (AUROC 0.75). For blast detection, 93 engineered morphology features outperformed ImageNet CNN embeddings on new patients (AUROC 0.957 vs.\ 0.920). For patient-level APL detection, reducing CNN embeddings to 32 principal components raised external AUROC from 0.743 to 0.833, and attention-based multiple instance learning on engineered features reached 0.812, comparable to established designs re-run on the same split (0.61--0.81). However, decision thresholds fixed for 95\% sensitivity on the development cohort did not transfer: at best 11 of 12 APL patients were detected with a specificity of 0.67, and several models missed half of them. We therefore recommend patient-level splits, sensitivity-first reporting with missed-case counts, and local threshold calibration before clinical use.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Acute promyelocytic leukemia, blood smear, data leakage, deep learning, external validation, feature engineering, multiple instance learning, sensitivity.
+\end{IEEEkeywords}
+
+%======================================================================
+\section{Introduction}
+\IEEEPARstart{A}{cute} leukemia is usually first suspected on a peripheral blood smear, where a trained morphologist looks for blasts and other abnormal white cells \cite{khoury2022who}. Acute promyelocytic leukemia (APL) shows how much rides on that first look: it is a medical emergency, because patients can bleed to death within days unless all-trans retinoic acid is started as soon as APL is suspected, often before genetic confirmation arrives. Reading smears takes time and experience, and the experience is not available everywhere, which is why automated smear analysis has attracted so much work.
+
+Published results look encouraging. Many deep-learning models report accuracies between 97\% and 100\% for leukemia detection from single-cell images \cite{jammal2025causalformer,jammal2025neurobridge}, and weakly supervised models reach AUCs above 0.95 for recognizing APL \cite{manescu2023apl}. Yet few of these systems are used in practice. Our starting point is that part of the gap lies not in the models but in how they are evaluated. When cells from the same patient appear in both the training and test sets, a model can succeed by recognizing the patient---the stain, the smear, the day it was scanned---rather than the disease. When the label is the patient's diagnosis copied onto every cell, this shortcut is always available. And when performance is summarized by accuracy alone, it hides the error that matters most clinically: a sick patient called healthy. Similar leakage and shortcut problems have been documented across machine-learning-based science \cite{kapoor2023leakage} and in medical imaging \cite{zech2018confounding,roberts2021pitfalls}.
+
+In this work we measure these effects directly on a public cohort of 106 patients with acute myeloid leukemia (AML), 34 of whom have APL, and we build an evaluation that a clinician could trust. Our contributions are:
+\begin{itemize}
+\item[\Ccontrib{1}] \emph{A controlled leakage audit.} With identical data, features and classifiers, we compare image-level cross-validation (CV), patient-grouped CV and an untouched external cohort, both for a label that belongs to the patient and for a label that belongs to the cell.
+\item[\Ccontrib{2}] \emph{Temporal external validation.} All models are developed on an earlier cohort and tested once on patients diagnosed later.
+\item[\Ccontrib{3}] \emph{Sensitivity-first reporting.} Decision thresholds are set on the development cohort for a sensitivity of at least 0.95, and we report recall, the number of missed APL patients, specificity, F1 score, negative predictive value and calibration, not only accuracy and AUROC.
+\item[\Ccontrib{4}] \emph{Interpretable features with ablation.} We design 93 morphology features that mirror what hematologists look at, compare them with ImageNet CNN embeddings and their fusion, and show through ablation which feature groups carry the signal.
+\item[\Ccontrib{5}] \emph{A lightweight patient-level pipeline.} Patient diagnosis is made by attention-based multiple instance learning (MIL) \cite{ilse2018abmil} over frozen features, trained on a CPU, and compared with established baselines on the same cohort.
+\end{itemize}
+Code, split files and label maps are released so that results on this cohort can be compared directly in future work.
+
+%======================================================================
+\section{Related Work}
+Table~\ref{tab:survey} summarizes representative studies. For each, the last column notes an open question that the study was not designed to answer and links it to the contribution of this paper that addresses it.
+
+\subsection{Cell-Level Classification of Blood Smears}
+Much of the literature classifies single segmented cells as leukemic or normal. The C-NMC 2019 challenge \cite{gupta2022cnmc} set a useful standard by holding out whole subjects for testing: ResNeXt models reached a weighted F1 score of 0.889 \cite{prellberg2019cnmc}, and a weighted ensemble of five CNNs reached 0.886 with an AUC of 0.941 \cite{mondal2021ensemble}. More recent transformer and hybrid designs report accuracies of 0.97 to 1.00 on C-NMC and on the ALL image dataset \cite{jammal2025causalformer,jammal2025neurobridge}, and hybrid pipelines that feed CNN features to classical classifiers reach 0.88 when separating lymphoblasts, myeloblasts and normal cells \cite{kasim2025multiclass}. These studies advanced architectures and training strategies. Because the split unit is not always reported, and because some of them combine sources in which class and source coincide, it remains open how much of their performance would carry over to new patients (\Ccontrib{1}, \Ccontrib{2}). A recent subject-disjoint benchmark on C-NMC found an AUROC of 0.913 \cite{albzour2026leakage}, which suggests that the split matters, but it covered a single, cell-level label.
+
+\subsection{Patient-Level and Weakly Supervised Diagnosis}
+Clinical decisions are made per patient, and several groups have moved in that direction with MIL. Expert-level single-cell classification \cite{matek2019blast,matek2021bmc} made it possible to identify genetic AML subtypes from blood-smear cells \cite{hehr2023scemila} and NPM1 or FLT3-ITD status from marrow \cite{wei2025annotationfree,eckardt2022npm1}. For APL, Sidhom \emph{et al.} \cite{sidhom2021apl} released the cohort used here and showed that a single-cell model trained on the earlier patients reached a cell-level AUC of 0.890 in development and 0.743 in the later validation cohort. Manescu \emph{et al.} \cite{manescu2023apl} trained an annotation-free MIL model on the same patients and reported an AUC of 0.96 under random three-fold CV. Interpretable morphometry has also proved useful: engineered cell features with sparse regression detected myelodysplasia and anemia subtypes and held up in an external cohort \cite{dealmeida2023haemorasis}. Across these studies, the number of missed patients at a clinically chosen operating point and the calibration of predicted probabilities are rarely reported (\Ccontrib{3}), and engineered features have not yet been compared with deep features for acute leukemia under the same protocol (\Ccontrib{4}).
+
+\subsection{Foundation Models and Generalization}
+Hematology foundation models aim to make cell representations robust to scanners and stains. DinoBloom, trained on more than 380,000 cells from 13 datasets, outperforms generic encoders \cite{koch2024dinobloom}; later work adapts DINOv3 with a risk-aware loss \cite{muminov2025cytodino} and compares foundation models with retrieval under a held-out-dataset protocol \cite{zamora2026retrieval}, while LeukemiaAttri provides images of the same films from different microscopes \cite{rehman2024leukemiaattri}. The largest patient-level study to date trained a DinoBloom-based transformer on 6,610 individuals and validated it on two external sets, including the cohort used here \cite{dasdelen2026caitomorph}. Such models need large labeled cohorts and GPU resources; whether lightweight models trained on a few hundred patients can be evaluated just as rigorously is the question behind \Ccontrib{5}.
+
+\begin{table*}[!t]
+\centering
+\caption{Representative previous studies. Results are as reported by each study and are not directly comparable across datasets. The last column notes an open question each study was not designed to address and the contribution of this paper (C1--C5) that addresses it.}
+\label{tab:survey}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\footnotesize
+\begin{tabular}{p{2.3cm}p{2.6cm}p{2.8cm}p{2.9cm}p{2.5cm}p{4.3cm}}
+\toprule
+Study & Data & Method & Evaluation & Reported result & Open question (addressed by) \\
+\midrule
+Prellberg \& Kramer, 2019 \cite{prellberg2019cnmc} & C-NMC, ALL vs.\ normal cells & ResNeXt with squeeze-excitation & Challenge test set, unseen subjects & Weighted F1 0.889 & Cell-level only; missed-case rate and calibration not reported (C3, C5) \\
+Mondal \emph{et al.}, 2021 \cite{mondal2021ensemble} & C-NMC & Weighted ensemble of five CNNs & Preliminary test set, 28 subjects & F1 0.886; AUC 0.941 & Cell-level only; ensemble cost (C3, C5) \\
+Kasim \emph{et al.}, 2025 \cite{kasim2025multiclass} & ALL-IDB2 + AML-LMU, 390 cells & CNN features + SVM/XGBoost & Image-level split & Accuracy 0.88 (3 classes) & Class and source coincide; patient grouping unavailable (C1, C2) \\
+Jammal \& Dahab, 2025 \cite{jammal2025causalformer} & C-NMC & CNN--ViT with causal reasoning & Split unit not reported & Accuracy 1.00 & Transfer to new patients unknown (C1, C2) \\
+Jammal \emph{et al.}, 2025 \cite{jammal2025neurobridge} & ALL image; C-NMC & Neuro-symbolic ViT & 5-fold CV, split unit not reported & Accuracy 1.00; 0.97 & Transfer to new patients unknown (C1, C2) \\
+Albzour, 2026 \cite{albzour2026leakage} & C-NMC & ML, CNN and ViT benchmark & Subject-disjoint, unseen subjects & AUROC 0.913 & One cell-level label; no patient-level model (C1, C5) \\
+Matek \emph{et al.}, 2019 \cite{matek2019blast} & AML-LMU, 200 patients & ResNeXt & Single-cell test set & Expert-level on 15 cell types & Single centre; diagnosis per patient not addressed (C2, C5) \\
+Hehr \emph{et al.}, 2023 \cite{hehr2023scemila} & 189 patients, 4 AML subtypes & Attention MIL & Patient-level CV & Subtype identification & Single laboratory; operating point not reported (C2, C3) \\
+Sidhom \emph{et al.}, 2021 \cite{sidhom2021apl} & APL-AML, 106 patients (\emph{this cohort}) & Single-cell CNN + MIL & Temporal validation & Cell AUC 0.890 $\rightarrow$ 0.743 & Missed APL patients and calibration not reported (C3) \\
+Manescu \emph{et al.}, 2023 \cite{manescu2023apl} & APL-AML (\emph{this cohort}) and others & Annotation-free MIL (VGG-19) & Random 3-fold CV & AUC 0.96 & Random rather than temporal split (C1, C2) \\
+de Almeida \emph{et al.}, 2023 \cite{dealmeida2023haemorasis} & 352 + 63 slides & Engineered morphometry + glmnet / MIL & Cross-validation and external cohort & Up to 0.90 AUC (MDS subtype) & Not applied to acute leukemia (C4) \\
+Wei \emph{et al.}, 2025 \cite{wei2025annotationfree} & 572 marrow slides & MIL ensemble & Single-centre test cohort & NPM1 AUC 0.90 & External cohort not available (C2) \\
+Koch \emph{et al.}, 2024 \cite{koch2024dinobloom} & 13 datasets, 380k cells & DINOv2 foundation model & Linear probing, MIL & Outperforms generic encoders & Patient-level external evaluation open (C2, C5) \\
+Dasdelen \emph{et al.}, 2026 \cite{dasdelen2026caitomorph} & 6,610 individuals; external incl.\ this cohort & DinoBloom + transformer MIL & Two external sets & 8-class acc.\ 0.72; malignancy AUC 0.97 & Needs large cohort and GPU (C5) \\
+Zamora \emph{et al.}, 2026 \cite{zamora2026retrieval} & Five datasets & Foundation models + retrieval & Held-out dataset & --- & Patient leakage not separated from dataset shift (C1) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+%======================================================================
+\section{Materials and Methods}
+
+\subsection{Dataset}
+We used the public APL-AML cohort of Sidhom \emph{et al.} \cite{sidhom2021apl}. It contains single-cell images from Wright-stained peripheral blood smears of 106 adults with AML treated at Johns Hopkins Hospital between 2010 and 2020, captured with a CellaVision DM100 analyzer. Thirty-four patients have APL and 72 have other AML subtypes. The authors split the cohort by date: 82 patients diagnosed before January 2019 form the Discovery cohort and 24 diagnosed later form the Validation cohort. The 25,724 cell images measure about $360\times363$ pixels; 15,632 of them carry a cell type assigned by the analyzer and confirmed by its operator, and the remaining 10,092 are unlabeled. Table~\ref{tab:dataset} and Fig.~\ref{fig:dataset} describe the composition.
+
+\begin{table}[!t]
+\centering
+\caption{Composition of the APL-AML cohort.}
+\label{tab:dataset}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Cohort & Diagnosis & Patients & Cells & Labeled cells & Cells per patient \\
+ & & & & & median (range) \\
+\midrule
+Discovery & AML & 60 & 11,523 & 8,077 & 134 (98--984) \\
+ & APL & 22 & 8,764 & 4,082 & 290 (112--1,066) \\
+Validation & AML & 12 & 3,589 & 1,893 & 252 (116--554) \\
+ & APL & 12 & 1,848 & 1,580 & 140 (83--268) \\
+\midrule
+Total & & 106 & 25,724 & 15,632 & 152 (83--1,066) \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_dataset.pdf}
+\caption{Cohort composition. (a) Patients per cohort and diagnosis. (b) Labeled cell types with at least 50 cells; monocytes are almost absent in APL (1,228 vs.\ 91 cells). (c) Number of cells per patient.}
+\label{fig:dataset}
+\end{figure*}
+
+The cohort has several characteristics that shape the analysis. The classes are imbalanced and the imbalance shifts between cohorts: APL makes up 27\% of Discovery patients but 50\% of Validation patients, so accuracy alone would mean different things in the two cohorts. The number of cells per patient is confounded with the diagnosis in opposite directions---Discovery APL patients have about twice as many cells as AML patients, whereas the reverse holds in Validation---so our patient-level models are designed to be insensitive to bag size. The original authors note that all Discovery smears scanned before 2018 were APL \cite{sidhom2021apl}, which means that acquisition date carries diagnostic information inside the Discovery cohort and invites shortcut learning whenever patients leak across splits. The mix of cell types also differs by diagnosis; labeled monocytes, for example, are nearly absent in APL. Finally, ten image files are truncated, 54 are full microscope fields rather than single-cell crops, cell labels are analyzer classifications verified by an operator rather than consensus annotations, and the Validation cohort comes from the same hospital and contains only 24 patients.
+
+\subsection{Learning Tasks}
+We defined three tasks on the same images (Table~\ref{tab:tasks}). In T1 every cell inherits its patient's diagnosis, which reproduces a common way of building single-cell datasets. In T2 the label is the cell's own type (blast versus other labeled white cells, excluding artefacts, unidentified cells, smudge cells and platelets). T3 is the clinical question: does this patient have APL?
+
+\begin{table}[!t]
+\centering
+\caption{Learning tasks (Discovery / Validation).}
+\label{tab:tasks}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lllr}
+\toprule
+Task & Unit & Positive class & Size \\
+\midrule
+T1 Diagnosis on cells & Cell & Cell from an APL patient (43.2\%) & 20,287 / 5,437 cells \\
+T2 Blast detection & Cell & Labeled blast (28.0\%) & 9,694 / 2,863 cells \\
+T3 Patient diagnosis & Patient & APL (22 of 82) & 82 / 24 patients \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Preprocessing and Cell Segmentation}
+Fig.~\ref{fig:preproc} outlines the pipeline. A manifest records every image with its patient, cohort, diagnosis and cell label. Unreadable files are kept as missing rows and imputed inside each training fold, and no image is removed because of its label. The Validation cohort is never used for fitting, threshold selection or calibration.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.92\columnwidth]{fig_preprocessing.pdf}
+\caption{Preprocessing pipeline. The orange steps prevent leakage: the fixed Discovery/Validation split and fitting every statistic inside the training fold.}
+\label{fig:preproc}
+\end{figure}
+
+For the engineered features, each image is resized to $192\times192$ pixels and separated into hematoxylin, eosin and residual channels by color deconvolution \cite{ruifrok2001deconvolution}. The nucleus is segmented by Otsu thresholding \cite{otsu1979} of the smoothed hematoxylin channel, followed by morphological opening and selection of the component nearest the image center. We found that pale cytoplasm could not be separated reliably from neighboring red cells by color, so instead of claiming a full cell outline we describe the cytoplasm with two proxies: a basophilic region of blue-dominant pixels within one nuclear radius, and a perinuclear ring 2--9 pixels wide that excludes the bright background (Fig.~\ref{fig:seg}).
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_segmentation.pdf}
+\caption{Segmentation behind the engineered features, shown on cells at the 25th and 75th percentile of each class list. Red: nucleus; green: basophilic region; blue tint: perinuclear ring. The upper lymphocyte and lower erythroblast illustrate failures in which the mask falls on neighboring red cells.}
+\label{fig:seg}
+\end{figure*}
+
+\subsection{Feature Representations}
+The 93 engineered features fall into six groups: nuclear shape (9 features: area, perimeter, circularity, eccentricity, solidity, extent, axis ratio, major axis and number of nuclear fragments); basophilic-region shape, nucleus-to-region ratio and rim size (10); stain and color statistics, i.e., hematoxylin and eosin optical density, CIE $L^*a^*b^*$ and saturation in the nucleus and the ring (26); chromatin texture from gray-level co-occurrence matrices \cite{haralick1973texture} at three distances together with nuclear entropy (16); uniform local binary patterns \cite{ojala2002lbp} at two radii (28); and counts and areas of pale nuclear spots and dark cytoplasmic granules (4). None of them depends on image size, file format or the source of the image.
+
+As a deep representation we used a frozen EfficientNet-B0 \cite{tan2019efficientnet} pretrained on ImageNet, which maps each $224\times224$ input to a 1,280-dimensional vector. The fusion representation concatenates the engineered features and the embedding after column-wise standardization. The released code also supports the DinoBloom foundation model \cite{koch2024dinobloom}; it was not evaluated here because its weights could not be downloaded in our computing environment.
+
+\subsection{Classification Models}
+Fig.~\ref{fig:model} shows how the components fit together. At cell level (T1, T2) we used L2-regularized logistic regression (LR) and LightGBM \cite{ke2017lightgbm}, both with class-balanced weights. Each model is a single pipeline that imputes and scales features using training data only.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_model.pdf}
+\caption{Model overview. Cells are represented by engineered features, frozen CNN embeddings or both. A cell-level classifier serves T1 and T2; for T3, a patient's cells are aggregated by pooled statistics or by gated attention MIL. Calibration and the decision threshold are fitted on development data only.}
+\label{fig:model}
+\end{figure*}
+
+For patient diagnosis (T3) each patient is represented by up to 500 randomly sampled cells. The pooled baseline summarizes every feature by its mean, standard deviation and 10th, 50th and 90th percentiles and applies LR. The gated attention MIL model \cite{ilse2018abmil} maps each cell to $\mathbf{h}_k=\mathrm{ReLU}(\mathbf{W}\mathbf{x}_k)$ with 128 units, weights the cells by
+\begin{equation}
+a_k=\frac{\exp\{\mathbf{w}^{\top}(\tanh(\mathbf{V}\mathbf{h}_k)\odot\sigma(\mathbf{U}\mathbf{h}_k))\}}{\sum_{j}\exp\{\mathbf{w}^{\top}(\tanh(\mathbf{V}\mathbf{h}_j)\odot\sigma(\mathbf{U}\mathbf{h}_j))\}},
+\end{equation}
+and classifies the weighted average $\mathbf{z}=\sum_k a_k\mathbf{h}_k$. Because the weights sum to one, the model does not depend on how many cells a patient has. It is trained for 40 epochs with AdamW (learning rate $2\times10^{-4}$, weight decay $10^{-3}$), class-weighted cross-entropy and random removal of 20\% of cells as augmentation.
+
+\subsection{Evaluation Protocol and Metrics}
+Every model was evaluated in three ways (Fig.~\ref{fig:splits}): 5-fold CV on the Discovery cohort with image-level folds, as is common in the literature; 5-fold CV with patient-grouped folds, in which no patient appears in two folds; and a single external test on the Validation cohort. Within each training fold, a further 80/20 split of the same kind was used to fit a calibration temperature \cite{guo2017calibration}. For the external test of T3, the prediction for each Validation patient is the average of all fold models over three seeds, and the decision threshold is chosen on the out-of-fold Discovery predictions of the same models.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_splits.pdf}
+\caption{Evaluation protocols. (a) Image-level splitting places cells of the same patient in training and test sets. (b) Patient-grouped splitting with an external cohort, used in this work; the external cohort is scored once.}
+\label{fig:splits}
+\end{figure*}
+
+Since missing an APL patient can delay life-saving treatment, whereas a false alarm leads only to a confirmatory genetic test, we fixed every decision threshold in advance to reach a sensitivity of at least 0.95 on development data. At that operating point we report sensitivity (recall) together with the number of missed positives, specificity, F1 score, negative predictive value (NPV) and accuracy. AUROC is reported as a threshold-free summary, and calibration as the expected calibration error (ECE, 15 bins). Confidence intervals (95\%) come from bootstrap resampling of patients \cite{efron1986bootstrap}, because cells from the same patient are correlated, and differences between two models are tested with a paired patient-level bootstrap.
+
+\subsection{Implementation Details}
+All experiments ran on a CPU-only workstation without a GPU (Table~\ref{tab:env}). Feature extraction dominates the cost; once features are stored, each cell-level configuration trains and evaluates in under a minute and each patient-level configuration in about a minute.
+
+\begin{table}[!t]
+\centering
+\caption{Computing environment and run times.}
+\label{tab:env}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Item & Specification \\
+\midrule
+Hardware & Intel Xeon 2.80\,GHz, 2 vCPUs, 7.8\,GB RAM, no GPU \\
+Software & Ubuntu 24.04.5 LTS; Python 3.13.16; PyTorch 2.14.1 (CPU); \\
+ & scikit-learn 1.9.1 \cite{pedregosa2011sklearn}; LightGBM 4.7.0; scikit-image 0.26.0; timm 1.0.30 \\
+Random seeds & 0, 1, 2 \\
+Engineered features & 16.1\,min for 25,724 cells (2 processes) \\
+EfficientNet-B0 embeddings & 51.2\,min for 25,724 cells (2 threads) \\
+Cell-level model, 5-fold CV & 11--40\,s (LR), 15--600\,s (LightGBM) \\
+Attention MIL, 5-fold CV & 33--61\,s per seed \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+%======================================================================
+\section{Results}
+\subsection{Exploratory Analysis}
+Fig.~\ref{fig:eda} summarizes the exploratory analysis of the engineered features. Every feature group shifted between the two cohorts, and stain and color features shifted most (median standardized mean difference 0.34, Fig.~\ref{fig:eda}a). The shift was large enough to recognize the cohort: among AML patients only, a classifier separated Validation from Discovery cells with an AUROC of 0.75 using stain and color features, compared with 0.59 for shape and texture features and 0.58 for EfficientNet-B0 embeddings (Fig.~\ref{fig:eda}b). Thirty-seven feature pairs were almost redundant ($|r|>0.9$). The diagnostic signal of individual features was only partly reproducible: patient-level AUROCs in the two cohorts correlated with $r=0.38$, and 11 of 93 features separated APL from AML in the same direction in both cohorts (Fig.~\ref{fig:eda}d). These observations motivated the feature-engineering experiments below.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_eda.pdf}
+\caption{Exploratory analysis. (a) Shift of engineered feature groups from Discovery to Validation. (b) AUROC of a classifier that tries to tell the two cohorts apart from AML cells; 0.5 means no detectable shift. (c) Patients projected on the first two principal components of their mean engineered features. (d) Patient-level AUROC of each feature for APL vs.\ AML in the two cohorts; blue points separate the classes consistently.}
+\label{fig:eda}
+\end{figure*}
+
+\subsection{Effect of the Evaluation Protocol}
+Table~\ref{tab:leakage} and Fig.~\ref{fig:leakage} compare the three protocols. When each cell carried its patient's diagnosis (T1), image-level CV reported AUROCs of 0.938--0.987. Grouping folds by patient lowered them to 0.867--0.901, and the external cohort to 0.658--0.734, so image-level CV overstated external performance by 0.25 to 0.32. When the label described the cell itself (T2), the three protocols nearly agreed and the overstatement was 0.013--0.036. The models themselves changed little: a classifier trained under the leaky protocol scored about the same on the external cohort as one trained under the grouped protocol. What changed was the number reported.
+
+\input{tables/tab_leakage}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_leakage.pdf}
+\caption{AUROC under the three protocols (mean of three seeds). Orange numbers give the inflation of image-level CV over the external cohort. (a) Cells labeled with the patient's diagnosis. (b) Cells labeled with their own type.}
+\label{fig:leakage}
+\end{figure*}
+
+\subsection{Engineered Versus Deep Features at Cell Level}
+For blast detection on new patients, engineered features with LightGBM reached an AUROC of 0.957 (95\% CI 0.931--0.977) and detected 99\% of blasts at a specificity of 0.62, whereas EfficientNet-B0 embeddings reached 0.920. The paired difference was $+0.034$ (0.008--0.065, $p=0.002$), and fusing both representations also improved on the embeddings alone ($+0.012$, 0.003--0.024). For diagnosis-on-cells (T1), fusion gave the highest external AUROC (0.734), although its advantage was not significant.
+
+\subsection{Feature Engineering}
+Table~\ref{tab:fe} reports the feature-engineering experiments for patient-level APL detection. Dimensionality reduction had the largest effect. Projecting the 1,280-dimensional embeddings onto 32 principal components, fitted on training cells only, raised external AUROC from 0.743 to 0.833, and 16 components gave the best operating point, detecting 11 of 12 APL patients at a specificity of 0.67. Removing redundant engineered features changed little. Normalizing stain features within each slide and L1 selection both lowered external AUROC, to 0.58 and 0.59: the color of a patient's cells carries diagnostic information---APL promyelocytes are heavily granulated---that slide-wise normalization removes, and L1 selection with 82 patients chose unstable features. A ``digital differential'' built from the predicted proportions of eight cell classes reached 0.785 and detected all 12 APL patients, at a specificity of 0.33. Selecting the configuration with the highest Discovery CV AUROC, a rule fixed before looking at the Validation cohort, picked PCA with 64 components, which reached an external AUROC of 0.819.
+
+\input{tables/tab_fe}
+
+\subsection{Patient-Level Diagnosis and the Operating Point}
+Table~\ref{tab:patient} lists the patient-level models without feature engineering. Attention MIL on engineered features ranked patients best (external AUROC 0.812, 95\% CI 0.614--0.963). The operating point, however, did not transfer. A threshold that detected at least 95\% of APL patients in Discovery labeled every Validation patient as APL for this model, and with EfficientNet-B0 features the same rule detected only 6 of 12 APL patients (Fig.~\ref{fig:confusion}). Youden thresholds traded the other way, missing half of the APL patients. Even a threshold re-set on the Validation cohort itself, which is not possible in practice, could have cleared at most about half of the AML patients without missing an APL patient (oracle specificity 0.42--0.50, Table~\ref{tab:fe}).
+
+\input{tables/tab_patient}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_confusion.pdf}
+\caption{Confusion matrices on the external cohort at the operating point fixed on Discovery for a sensitivity of at least 0.95. Missed APL patients are shown in red.}
+\label{fig:confusion}
+\end{figure*}
+
+\subsection{Comparison With Existing Methods on the Same Cohort}
+Table~\ref{tab:compare} compares our models with existing methods on the same patients. The original study reported a cell-level AUC of 0.743 in the later cohort \cite{sidhom2021apl}, and Manescu \emph{et al.} reported 0.96 with random three-fold CV \cite{manescu2023apl}; neither reported results at a fixed sensitivity. Because the protocols differ, we re-ran representative designs on the identical split with the same operating-point rule. The promyelocyte proportion, the biomarker used as comparator in \cite{sidhom2021apl}, reached an AUROC of 0.611, and a model on the full differential count reached 0.681. Averaging single-cell predictions per patient, as in \cite{sidhom2021apl}, reached 0.681--0.799 depending on the features, and the CNN-feature-plus-SVM design of \cite{kasim2025multiclass} reached 0.806. Our best patient-level models reached 0.812 without feature engineering and 0.833 with PCA. With 24 external patients the confidence intervals of all learned models overlap; the clearest gain is over the manual biomarkers, and the clearest difference between protocols is the gap between random CV (0.96) and temporal validation.
+
+\input{tables/tab_compare}
+
+\subsection{Ablation and Interpretation}
+Table~\ref{tab:ablation} and Fig.~\ref{fig:impact} show which engineered feature groups matter for blast detection. Removing the stain and color group cost $-0.034$ AUROC (95\% CI $-0.060$ to $-0.015$), chromatin texture $-0.012$ and the basophilic region $-0.005$; nuclear shape, local binary patterns and the nucleolus and granule proxies were redundant given the other groups. Temperature scaling fitted on Discovery left the external calibration error at 0.06--0.13 for cell-level models and 0.26--0.36 for patient-level models. Attention weights of the best patient-level model were highest for cells labeled as monocytes (2.8 times the average in AML patients) and lowest for smudge cells; since monocytes are nearly absent in APL (Fig.~\ref{fig:dataset}b), the model appears to use monocyte-like cells as evidence against APL.
+
+\input{tables/tab_ablation}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_impact.pdf}
+\caption{Effect of design choices (top) and of removing each engineered feature group for blast detection (bottom) on external AUROC. Bars are 95\% confidence intervals from a paired patient-level bootstrap.}
+\label{fig:impact}
+\end{figure*}
+
+%======================================================================
+\section{Discussion}
+Three findings stand out. First, the amount of leakage depends on what the label describes. When a label belongs to the patient, every cell carries the same stain, smear and scan date, and a model can learn these instead of the disease; in this cohort, where scan date and diagnosis are partly confounded \cite{sidhom2021apl}, the inflation reached 0.32 AUROC. Image-level results for diagnosis-level labels should therefore be read with caution, while results for cell-level labels are much less affected. This may explain why studies that held out whole subjects, such as the C-NMC challenge entries \cite{prellberg2019cnmc,mondal2021ensemble}, report F1 scores near 0.89 rather than near 1.0.
+
+Second, ranking transferred to the later cohort better than decisions did. External AUROCs above 0.8 show that the models ordered patients reasonably well, but thresholds chosen on the development cohort either flagged everyone or missed half of the APL patients. The exploratory analysis points to the reason: stain and color, which carry real diagnostic information, also drift between cohorts. For a condition in which a missed diagnosis can be fatal, a model like this is best used to prioritize smears for urgent review rather than to rule APL out, and its threshold should be re-calibrated on local cases before use.
+
+Third, simple, principled feature engineering mattered more than model complexity. Reducing CNN embeddings to a few principal components improved transfer, consistent with the small number of training patients; engineered features matched or beat CNN embeddings for blast detection and remained interpretable; and removing stain information hurt, because in APL the color of the cytoplasm is part of the disease. Attention MIL ranked patients well but was not significantly better than averaging cell predictions, which is in line with the modest gains reported for MIL on small cohorts.
+
+This study has limitations. It uses a single hospital, and the external cohort is temporal and contains only 24 patients, so patient-level confidence intervals are wide and small differences between models cannot be resolved. Cell labels come from an analyzer verified by an operator rather than from expert consensus. Our cytoplasm features rely on proxies, and segmentation fails on some small cells. Hematology foundation models such as DinoBloom \cite{koch2024dinobloom} were implemented but not evaluated, and multi-site validation on C-NMC, AML-Cytomorphology\_LMU and other public cohorts remains to be done with the released protocol.
+
+%======================================================================
+\section{Conclusion}
+Reported accuracy for leukemia detection from blood smears depends strongly on how the evaluation is set up. Splitting cells instead of patients inflated AUROC by up to 0.32 when cells carried the patient's diagnosis. Under patient-level, temporally separated evaluation, interpretable engineered features matched or exceeded ImageNet CNN features, dimensionality reduction improved generalization, and the best models ranked APL patients with AUROCs above 0.8. Decision thresholds, however, did not carry over from one cohort to the next, so no model detected every APL patient while clearing most AML patients. We recommend that studies in this area split data by patient, state whether labels describe cells or patients, test on a separate cohort or site, and report sensitivity, missed cases, specificity, F1 score, NPV and calibration at a pre-specified operating point.
+
+\section*{Data and Code Availability}
+The APL-AML cohort is available at \url{https://github.com/sidhomj/DeepAPL}. Code, split files, label maps and per-model outputs are released at [repository URL]. Reporting follows TRIPOD+AI \cite{collins2024tripodai}.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

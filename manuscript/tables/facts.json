@@ -1,0 +1,794 @@
+{
+ "leak": [
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "model": "Engineered + LightGBM",
+   "image_cv": 0.9873,
+   "grouped_cv": 0.8959,
+   "ext": 0.6689,
+   "ext_lo": 0.4954,
+   "ext_hi": 0.8106,
+   "sens": 0.6894,
+   "spec": 0.5526,
+   "ece": 0.146,
+   "infl": 0.3184,
+   "infl_cv": 0.0914,
+   "seeds": 3
+  },
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "model": "Engineered + LR",
+   "image_cv": 0.9377,
+   "grouped_cv": 0.8953,
+   "ext": 0.6579,
+   "ext_lo": 0.4776,
+   "ext_hi": 0.7984,
+   "sens": 0.7282,
+   "spec": 0.457,
+   "ece": 0.128,
+   "infl": 0.2798,
+   "infl_cv": 0.0425,
+   "seeds": 3
+  },
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "model": "EfficientNet-B0 + LR",
+   "image_cv": 0.9754,
+   "grouped_cv": 0.867,
+   "ext": 0.6941,
+   "ext_lo": 0.5564,
+   "ext_hi": 0.8113,
+   "sens": 0.8095,
+   "spec": 0.4256,
+   "ece": 0.0812,
+   "infl": 0.2813,
+   "infl_cv": 0.1084,
+   "seeds": 3
+  },
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "model": "Fusion + LR",
+   "image_cv": 0.9845,
+   "grouped_cv": 0.9013,
+   "ext": 0.7343,
+   "ext_lo": 0.5947,
+   "ext_hi": 0.8478,
+   "sens": 0.7801,
+   "spec": 0.5365,
+   "ece": 0.1021,
+   "infl": 0.2502,
+   "infl_cv": 0.0832,
+   "seeds": 3
+  },
+  {
+   "task": "T2 Blast detection",
+   "model": "Engineered + LightGBM",
+   "image_cv": 0.9782,
+   "grouped_cv": 0.9537,
+   "ext": 0.9572,
+   "ext_lo": 0.9307,
+   "ext_hi": 0.9768,
+   "sens": 0.9905,
+   "spec": 0.6211,
+   "ece": 0.0753,
+   "infl": 0.0209,
+   "infl_cv": 0.0244,
+   "seeds": 3
+  },
+  {
+   "task": "T2 Blast detection",
+   "model": "Engineered + LR",
+   "image_cv": 0.9647,
+   "grouped_cv": 0.9508,
+   "ext": 0.9513,
+   "ext_lo": 0.9221,
+   "ext_hi": 0.972,
+   "sens": 0.9799,
+   "spec": 0.6999,
+   "ece": 0.1099,
+   "infl": 0.0134,
+   "infl_cv": 0.0139,
+   "seeds": 3
+  },
+  {
+   "task": "T2 Blast detection",
+   "model": "EfficientNet-B0 + LR",
+   "image_cv": 0.9555,
+   "grouped_cv": 0.9265,
+   "ext": 0.9199,
+   "ext_lo": 0.8741,
+   "ext_hi": 0.9559,
+   "sens": 0.9569,
+   "spec": 0.6383,
+   "ece": 0.1095,
+   "infl": 0.0356,
+   "infl_cv": 0.029,
+   "seeds": 3
+  },
+  {
+   "task": "T2 Blast detection",
+   "model": "Fusion + LR",
+   "image_cv": 0.9642,
+   "grouped_cv": 0.9402,
+   "ext": 0.9315,
+   "ext_lo": 0.8944,
+   "ext_hi": 0.961,
+   "sens": 0.9625,
+   "spec": 0.6793,
+   "ece": 0.0914,
+   "infl": 0.0326,
+   "infl_cv": 0.0239,
+   "seeds": 3
+  }
+ ],
+ "patient": [
+  {
+   "model": "P1",
+   "rep": "Engineered",
+   "agg": "Pooled + LR",
+   "cv": 0.8673,
+   "cv_sd": 0.0589,
+   "ext": 0.6736,
+   "lo": 0.4404,
+   "hi": 0.8963,
+   "sens": 0.6667,
+   "spec": 0.5833,
+   "ece": 0.3803,
+   "drop": 0.1937
+  },
+  {
+   "model": "P2",
+   "rep": "EfficientNet-B0",
+   "agg": "Pooled + LR",
+   "cv": 0.9095,
+   "cv_sd": 0.0176,
+   "ext": 0.6389,
+   "lo": 0.4123,
+   "hi": 0.8571,
+   "sens": 0.75,
+   "spec": 0.5,
+   "ece": 0.3037,
+   "drop": 0.2706
+  },
+  {
+   "model": "P3",
+   "rep": "Fusion",
+   "agg": "Pooled + LR",
+   "cv": 0.9101,
+   "cv_sd": 0.0176,
+   "ext": 0.6667,
+   "lo": 0.4429,
+   "hi": 0.8741,
+   "sens": 0.5,
+   "spec": 0.6667,
+   "ece": 0.3188,
+   "drop": 0.2434
+  },
+  {
+   "model": "P4",
+   "rep": "Engineered",
+   "agg": "Gated attention MIL",
+   "cv": 0.8266,
+   "cv_sd": 0.0033,
+   "ext": 0.7778,
+   "lo": 0.5664,
+   "hi": 0.9429,
+   "sens": 0.75,
+   "spec": 0.75,
+   "ece": 0.2996,
+   "drop": 0.0489
+  },
+  {
+   "model": "P5",
+   "rep": "EfficientNet-B0",
+   "agg": "Gated attention MIL",
+   "cv": 0.8854,
+   "cv_sd": 0.0212,
+   "ext": 0.625,
+   "lo": 0.3846,
+   "hi": 0.8438,
+   "sens": 0.5833,
+   "spec": 0.5833,
+   "ece": 0.2312,
+   "drop": 0.2604
+  },
+  {
+   "model": "P6",
+   "rep": "Fusion",
+   "agg": "Gated attention MIL",
+   "cv": 0.8856,
+   "cv_sd": 0.0389,
+   "ext": 0.6736,
+   "lo": 0.4375,
+   "hi": 0.8811,
+   "sens": 0.5833,
+   "spec": 0.5833,
+   "ece": 0.2737,
+   "drop": 0.212
+  }
+ ],
+ "paired": [
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "comparison": "Engineered (LightGBM) vs EfficientNet-B0",
+   "delta": -0.0106,
+   "lo": -0.1195,
+   "hi": 0.0803,
+   "p": 0.821
+  },
+  {
+   "task": "T1 Diagnosis-on-cells",
+   "comparison": "Fusion vs EfficientNet-B0",
+   "delta": 0.0334,
+   "lo": -0.0159,
+   "hi": 0.0716,
+   "p": 0.183
+  },
+  {
+   "task": "T2 Blast detection",
+   "comparison": "Engineered (LightGBM) vs EfficientNet-B0",
+   "delta": 0.034,
+   "lo": 0.0085,
+   "hi": 0.0655,
+   "p": 0.002
+  },
+  {
+   "task": "T2 Blast detection",
+   "comparison": "Fusion vs EfficientNet-B0",
+   "delta": 0.0125,
+   "lo": 0.0033,
+   "hi": 0.0243,
+   "p": 0.004
+  },
+  {
+   "task": "T3 Patient diagnosis",
+   "comparison": "Attention MIL vs pooled (engineered)",
+   "delta": 0.1042,
+   "lo": -0.1333,
+   "hi": 0.3566,
+   "p": 0.4155
+  },
+  {
+   "task": "T3 Patient diagnosis",
+   "comparison": "Engineered vs EfficientNet-B0 (attention MIL)",
+   "delta": 0.1528,
+   "lo": -0.098,
+   "hi": 0.4062,
+   "p": 0.2445
+  },
+  {
+   "task": "T3 Patient diagnosis",
+   "comparison": "Fusion vs EfficientNet-B0 (attention MIL)",
+   "delta": 0.0486,
+   "lo": 0.007,
+   "hi": 0.1111,
+   "p": 0.0315
+  }
+ ],
+ "ablation": [
+  {
+   "setting": "All engineered features",
+   "n_features": 93,
+   "auroc": 0.6709,
+   "auroc_lo": 0.4973,
+   "auroc_hi": 0.8029,
+   "delta": 0.0,
+   "delta_lo": 0.0,
+   "delta_hi": 0.0,
+   "p": 1.0,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Nuclear shape",
+   "n_features": 84,
+   "auroc": 0.681,
+   "auroc_lo": 0.5112,
+   "auroc_hi": 0.8129,
+   "delta": 0.01,
+   "delta_lo": -0.0043,
+   "delta_hi": 0.0237,
+   "p": 0.212,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Nuclear shape only",
+   "n_features": 9,
+   "auroc": 0.5495,
+   "auroc_lo": 0.4347,
+   "auroc_hi": 0.6362,
+   "delta": -0.1214,
+   "delta_lo": -0.2826,
+   "delta_hi": 0.0624,
+   "p": 0.174,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Basophilic region",
+   "n_features": 83,
+   "auroc": 0.6654,
+   "auroc_lo": 0.4935,
+   "auroc_hi": 0.7959,
+   "delta": -0.0055,
+   "delta_lo": -0.0247,
+   "delta_hi": 0.0103,
+   "p": 0.496,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Basophilic region only",
+   "n_features": 10,
+   "auroc": 0.5792,
+   "auroc_lo": 0.4866,
+   "auroc_hi": 0.6618,
+   "delta": -0.0917,
+   "delta_lo": -0.2418,
+   "delta_hi": 0.0732,
+   "p": 0.282,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Stain and colour",
+   "n_features": 67,
+   "auroc": 0.5478,
+   "auroc_lo": 0.4414,
+   "auroc_hi": 0.6388,
+   "delta": -0.1231,
+   "delta_lo": -0.2723,
+   "delta_hi": 0.0457,
+   "p": 0.15,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Stain and colour only",
+   "n_features": 26,
+   "auroc": 0.6817,
+   "auroc_lo": 0.5064,
+   "auroc_hi": 0.8167,
+   "delta": 0.0108,
+   "delta_lo": -0.0319,
+   "delta_hi": 0.0415,
+   "p": 0.58,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Chromatin texture (GLCM, entropy)",
+   "n_features": 77,
+   "auroc": 0.6753,
+   "auroc_lo": 0.4971,
+   "auroc_hi": 0.8029,
+   "delta": 0.0043,
+   "delta_lo": -0.0074,
+   "delta_hi": 0.0156,
+   "p": 0.464,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Chromatin texture (GLCM, entropy) only",
+   "n_features": 16,
+   "auroc": 0.5257,
+   "auroc_lo": 0.3886,
+   "auroc_hi": 0.658,
+   "delta": -0.1452,
+   "delta_lo": -0.331,
+   "delta_hi": 0.0669,
+   "p": 0.178,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Local binary patterns",
+   "n_features": 65,
+   "auroc": 0.6702,
+   "auroc_lo": 0.4959,
+   "auroc_hi": 0.8003,
+   "delta": -0.0007,
+   "delta_lo": -0.019,
+   "delta_hi": 0.0197,
+   "p": 0.946,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Local binary patterns only",
+   "n_features": 28,
+   "auroc": 0.5814,
+   "auroc_lo": 0.4562,
+   "auroc_hi": 0.6803,
+   "delta": -0.0895,
+   "delta_lo": -0.2415,
+   "delta_hi": 0.081,
+   "p": 0.276,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "without Nucleoli and granules",
+   "n_features": 89,
+   "auroc": 0.671,
+   "auroc_lo": 0.4975,
+   "auroc_hi": 0.8023,
+   "delta": 0.0001,
+   "delta_lo": -0.0058,
+   "delta_hi": 0.006,
+   "p": 0.95,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "Nucleoli and granules only",
+   "n_features": 4,
+   "auroc": 0.5002,
+   "auroc_lo": 0.3793,
+   "auroc_hi": 0.6067,
+   "delta": -0.1707,
+   "delta_lo": -0.365,
+   "delta_hi": 0.0567,
+   "p": 0.136,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "setting": "All engineered features",
+   "n_features": 93,
+   "auroc": 0.9504,
+   "auroc_lo": 0.9211,
+   "auroc_hi": 0.9714,
+   "delta": 0.0,
+   "delta_lo": 0.0,
+   "delta_hi": 0.0,
+   "p": 1.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Nuclear shape",
+   "n_features": 84,
+   "auroc": 0.9494,
+   "auroc_lo": 0.9195,
+   "auroc_hi": 0.9705,
+   "delta": -0.0011,
+   "delta_lo": -0.003,
+   "delta_hi": 0.0008,
+   "p": 0.226,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Nuclear shape only",
+   "n_features": 9,
+   "auroc": 0.81,
+   "auroc_lo": 0.7249,
+   "auroc_hi": 0.8788,
+   "delta": -0.1404,
+   "delta_lo": -0.2122,
+   "delta_hi": -0.0818,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Basophilic region",
+   "n_features": 83,
+   "auroc": 0.9449,
+   "auroc_lo": 0.914,
+   "auroc_hi": 0.9681,
+   "delta": -0.0055,
+   "delta_lo": -0.0093,
+   "delta_hi": -0.0029,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Basophilic region only",
+   "n_features": 10,
+   "auroc": 0.823,
+   "auroc_lo": 0.7405,
+   "auroc_hi": 0.8943,
+   "delta": -0.1274,
+   "delta_lo": -0.1978,
+   "delta_hi": -0.0695,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Stain and colour",
+   "n_features": 67,
+   "auroc": 0.9163,
+   "auroc_lo": 0.8746,
+   "auroc_hi": 0.9481,
+   "delta": -0.0341,
+   "delta_lo": -0.0601,
+   "delta_hi": -0.0147,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Stain and colour only",
+   "n_features": 26,
+   "auroc": 0.9125,
+   "auroc_lo": 0.8578,
+   "auroc_hi": 0.9514,
+   "delta": -0.038,
+   "delta_lo": -0.0779,
+   "delta_hi": -0.0127,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Chromatin texture (GLCM, entropy)",
+   "n_features": 77,
+   "auroc": 0.9387,
+   "auroc_lo": 0.9053,
+   "auroc_hi": 0.963,
+   "delta": -0.0117,
+   "delta_lo": -0.0231,
+   "delta_hi": -0.0044,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Chromatin texture (GLCM, entropy) only",
+   "n_features": 16,
+   "auroc": 0.8022,
+   "auroc_lo": 0.7184,
+   "auroc_hi": 0.8723,
+   "delta": -0.1482,
+   "delta_lo": -0.2208,
+   "delta_hi": -0.0857,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Local binary patterns",
+   "n_features": 65,
+   "auroc": 0.9468,
+   "auroc_lo": 0.9156,
+   "auroc_hi": 0.9708,
+   "delta": -0.0036,
+   "delta_lo": -0.01,
+   "delta_hi": 0.0019,
+   "p": 0.236,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Local binary patterns only",
+   "n_features": 28,
+   "auroc": 0.793,
+   "auroc_lo": 0.7177,
+   "auroc_hi": 0.8593,
+   "delta": -0.1574,
+   "delta_lo": -0.2253,
+   "delta_hi": -0.0975,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "without Nucleoli and granules",
+   "n_features": 89,
+   "auroc": 0.9512,
+   "auroc_lo": 0.922,
+   "auroc_hi": 0.9727,
+   "delta": 0.0008,
+   "delta_lo": -0.0022,
+   "delta_hi": 0.0037,
+   "p": 0.522,
+   "task": "T2 Blast detection"
+  },
+  {
+   "setting": "Nucleoli and granules only",
+   "n_features": 4,
+   "auroc": 0.86,
+   "auroc_lo": 0.7931,
+   "auroc_hi": 0.9095,
+   "delta": -0.0904,
+   "delta_lo": -0.1419,
+   "delta_hi": -0.0537,
+   "p": 0.0,
+   "task": "T2 Blast detection"
+  }
+ ],
+ "calibration": [
+  {
+   "model": "Engineered (LR)",
+   "ece_raw": 0.13,
+   "ece_scaled": 0.1102,
+   "brier_raw": 0.2231,
+   "brier_scaled": 0.2189,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "model": "Engineered (LightGBM)",
+   "ece_raw": 0.1718,
+   "ece_scaled": 0.1303,
+   "brier_raw": 0.2206,
+   "brier_scaled": 0.2085,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "model": "EfficientNet-B0 (LR)",
+   "ece_raw": 0.2074,
+   "ece_scaled": 0.0987,
+   "brier_raw": 0.2393,
+   "brier_scaled": 0.2027,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "model": "Fusion (LR)",
+   "ece_raw": 0.2031,
+   "ece_scaled": 0.1083,
+   "brier_raw": 0.2242,
+   "brier_scaled": 0.1933,
+   "task": "T1 Diagnosis-on-cells"
+  },
+  {
+   "model": "Engineered (LR)",
+   "ece_raw": 0.0966,
+   "ece_scaled": 0.0957,
+   "brier_raw": 0.0876,
+   "brier_scaled": 0.0876,
+   "task": "T2 Blast detection"
+  },
+  {
+   "model": "Engineered (LightGBM)",
+   "ece_raw": 0.0522,
+   "ece_scaled": 0.0576,
+   "brier_raw": 0.0759,
+   "brier_scaled": 0.0734,
+   "task": "T2 Blast detection"
+  },
+  {
+   "model": "EfficientNet-B0 (LR)",
+   "ece_raw": 0.1052,
+   "ece_scaled": 0.102,
+   "brier_raw": 0.117,
+   "brier_scaled": 0.1079,
+   "task": "T2 Blast detection"
+  },
+  {
+   "model": "Fusion (LR)",
+   "ece_raw": 0.0879,
+   "ece_scaled": 0.0821,
+   "brier_raw": 0.1037,
+   "brier_scaled": 0.0947,
+   "task": "T2 Blast detection"
+  }
+ ],
+ "attention": [
+  {
+   "cell_type": "Arifact",
+   "dx": "APL",
+   "mean": 2.401,
+   "count": 25
+  },
+  {
+   "cell_type": "Band neutrophils",
+   "dx": "AML",
+   "mean": 0.479,
+   "count": 32
+  },
+  {
+   "cell_type": "Band neutrophils",
+   "dx": "APL",
+   "mean": 0.516,
+   "count": 34
+  },
+  {
+   "cell_type": "Blast, no lineage spec",
+   "dx": "AML",
+   "mean": 0.419,
+   "count": 272
+  },
+  {
+   "cell_type": "Blast, no lineage spec",
+   "dx": "APL",
+   "mean": 0.446,
+   "count": 323
+  },
+  {
+   "cell_type": "Eosinophils",
+   "dx": "APL",
+   "mean": 0.797,
+   "count": 15
+  },
+  {
+   "cell_type": "Erythroblast",
+   "dx": "AML",
+   "mean": 1.179,
+   "count": 162
+  },
+  {
+   "cell_type": "Erythroblast",
+   "dx": "APL",
+   "mean": 1.513,
+   "count": 63
+  },
+  {
+   "cell_type": "Giant thrombocyte",
+   "dx": "APL",
+   "mean": 0.314,
+   "count": 16
+  },
+  {
+   "cell_type": "Lymphocyte",
+   "dx": "AML",
+   "mean": 0.685,
+   "count": 261
+  },
+  {
+   "cell_type": "Lymphocyte",
+   "dx": "APL",
+   "mean": 0.894,
+   "count": 362
+  },
+  {
+   "cell_type": "Lymphocyte, variant",
+   "dx": "AML",
+   "mean": 1.156,
+   "count": 157
+  },
+  {
+   "cell_type": "Lymphocyte, variant",
+   "dx": "APL",
+   "mean": 1.635,
+   "count": 84
+  },
+  {
+   "cell_type": "Monocyte",
+   "dx": "AML",
+   "mean": 2.778,
+   "count": 202
+  },
+  {
+   "cell_type": "Monocyte",
+   "dx": "APL",
+   "mean": 3.773,
+   "count": 44
+  },
+  {
+   "cell_type": "Myelocyte",
+   "dx": "AML",
+   "mean": 0.577,
+   "count": 36
+  },
+  {
+   "cell_type": "Myelocyte",
+   "dx": "APL",
+   "mean": 0.408,
+   "count": 33
+  },
+  {
+   "cell_type": "Promyelocyte",
+   "dx": "AML",
+   "mean": 1.225,
+   "count": 89
+  },
+  {
+   "cell_type": "Promyelocyte",
+   "dx": "APL",
+   "mean": 1.078,
+   "count": 83
+  },
+  {
+   "cell_type": "Segmented neutrophils",
+   "dx": "AML",
+   "mean": 0.642,
+   "count": 225
+  },
+  {
+   "cell_type": "Segmented neutrophils",
+   "dx": "APL",
+   "mean": 0.824,
+   "count": 306
+  },
+  {
+   "cell_type": "Smudge cells",
+   "dx": "AML",
+   "mean": 0.076,
+   "count": 358
+  },
+  {
+   "cell_type": "Smudge cells",
+   "dx": "APL",
+   "mean": 0.579,
+   "count": 147
+  },
+  {
+   "cell_type": "Unidentified",
+   "dx": "APL",
+   "mean": 1.372,
+   "count": 24
+  }
+ ]
+}

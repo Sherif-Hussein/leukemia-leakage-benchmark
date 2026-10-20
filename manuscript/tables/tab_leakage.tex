@@ -1,0 +1,22 @@
+\begin{table*}[!t]
+\centering
+\caption{Leakage audit at cell level (AUROC, mean of three seeds). External = Validation cohort, model trained with patient-grouped protocol; 95\% CI from patient-level bootstrap.}
+\label{tab:leakage}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccccc}
+\toprule
+Task & Model & Image-level CV & Grouped CV & External [95\% CI] & Sens. & Spec. & ECE & Inflation$^{\dagger}$ \\
+\midrule
+T1 Diagnosis-on-cells & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.69 & 0.55 & 0.146 & +0.318 \\
+ & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.73 & 0.46 & 0.128 & +0.280 \\
+ & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & 0.81 & 0.43 & 0.081 & +0.281 \\
+ & Fusion + LR & 0.985 & 0.901 & \textbf{0.734 [0.595, 0.848]} & 0.78 & 0.54 & 0.102 & +0.250 \\
+\midrule
+T2 Blast detection & Engineered + LightGBM & 0.978 & 0.954 & \textbf{0.957 [0.931, 0.977]} & 0.99 & 0.62 & 0.075 & +0.021 \\
+ & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & 0.98 & 0.70 & 0.110 & +0.013 \\
+ & EfficientNet-B0 + LR & 0.956 & 0.927 & 0.920 [0.874, 0.956] & 0.96 & 0.64 & 0.109 & +0.036 \\
+ & Fusion + LR & 0.964 & 0.940 & 0.932 [0.894, 0.961] & 0.96 & 0.68 & 0.091 & +0.033 \\
+\bottomrule
+\end{tabular}
+\\[2pt]{\footnotesize $^{\dagger}$Image-level CV AUROC minus external AUROC.}
+\end{table*}

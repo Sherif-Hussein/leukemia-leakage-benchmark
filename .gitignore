@@ -1,0 +1,19 @@
+# data and cached features (regenerate with the scripts)
+DeepAPL/
+data/
+features/
+*.npy
+*.parquet
+
+# LaTeX build files
+*.aux
+*.log
+*.blg
+*.out
+*.bbl
+*.synctex.gz
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

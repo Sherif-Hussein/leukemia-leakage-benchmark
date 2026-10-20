@@ -1,0 +1,27 @@
+digraph M {
+  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=10, nodesep=0.22, ranksep=0.35, margin=0.05, compound=true];
+  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=9];
+  edge  [color="#5B6575", arrowsize=0.6];
+  cell [label="Single-cell\nimage", shape=box, fillcolor="#DCE6F5"];
+  subgraph cluster_rep { label="Representation"; fontsize=9; style=dashed; color="#9AA4B2";
+    h [label="Engineered\n93-d"]; e [label="EfficientNet-B0\n1,280-d (frozen)"]; d [label="DinoBloom-B\n768-d (frozen)"];
+  }
+  f [label="Fusion\n(concatenate +\nstandardise)"];
+  subgraph cluster_cell { label="Cell-level classifier (T1, T2)"; fontsize=9; style=dashed; color="#9AA4B2";
+    lr [label="Logistic regression\nor LightGBM"];
+  }
+  subgraph cluster_pat { label="Patient-level model (T3)"; fontsize=9; style=dashed; color="#9AA4B2";
+    bag [label="Bag of &#8804; 500\ncell vectors"];
+    att [label=<Gated attention<BR/>a<SUB>k</SUB> = softmax(<I>w</I><SUP>T</SUP>(tanh(<I>V</I>h<SUB>k</SUB>) &#8857; &#963;(<I>U</I>h<SUB>k</SUB>)))>];
+    agg [margin="0.15,0.12", label=<z = &#931;<SUB>k</SUB> a<SUB>k</SUB> h<SUB>k</SUB><BR/>&#8594; linear &#8594; logit>];
+    pool [label="Baseline: pooled\nmean, SD, P10/50/90\n&#8594; logistic regression"];
+  }
+  cal [label="Temperature scaling\n+ threshold\n(inner validation)", fillcolor="#FCEBD0"];
+  out [label="P(blast) / P(APL)\n+ attention per cell", fillcolor="#DCE6F5"];
+  cell -> h; cell -> e; cell -> d;
+  h -> f; e -> f; d -> f;
+  f -> lr -> cal;
+  f -> bag -> att -> agg -> cal;
+  bag -> pool -> cal;
+  cal -> out;
+}

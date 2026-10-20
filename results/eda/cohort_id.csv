@@ -1,0 +1,5 @@
+representation,cohort_auroc
+Engineered (all),0.7038504400139146
+Engineered: stain and colour,0.7527679679692951
+Engineered: shape + texture,0.5886437495546227
+EfficientNet-B0,0.582390916277208

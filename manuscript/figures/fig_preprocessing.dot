@@ -1,0 +1,25 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=10, nodesep=0.25, ranksep=0.28, margin=0.05];
+  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=9, width=2.2];
+  edge  [color="#5B6575", arrowsize=0.6];
+  raw   [label="APL-AML archive (CellaVision DM100)\n106 patients, 25,724 JPEG cell images\n~360 x 363 px, Wright stain", fillcolor="#DCE6F5"];
+  man   [label="Manifest: path, patient, cohort,\ndiagnosis, technologist cell type"];
+  qc    [label="Quality control\n10 unreadable files &#8594; missing\n54 full-field images kept (resized)"];
+  split [label="Cohort split fixed by source\nDiscovery 82 pts | Validation 24 pts\n(Validation never used for fitting)", fillcolor="#FCEBD0"];
+  task  [label="Task definition\nT1 diagnosis-on-cells | T2 blast vs other\n| T3 patient diagnosis"];
+  subgraph cluster_a { label="Engineered branch"; fontsize=9; color="#9AA4B2"; style=dashed;
+    rs1 [label="Resize 192 x 192 (bilinear)"];
+    hed [label="Colour deconvolution (H, E, D)\nGaussian smoothing of H"];
+    seg [label="Nucleus: Otsu on H + opening +\ncentral component\nCytoplasm proxy: basophilic region\n+ perinuclear ring (2-9 px)"];
+    fe  [label="93 features: shape, stain/colour,\nGLCM, entropy, LBP, nucleoli/granules"];
+  }
+  subgraph cluster_b { label="Deep branch"; fontsize=9; color="#9AA4B2"; style=dashed;
+    rs2 [label="Resize 224 x 224 (bicubic)\nImageNet mean/std normalisation"];
+    enc [label="Frozen encoder forward pass\nEfficientNet-B0 (1,280-d)\nDinoBloom-B (768-d)"];
+  }
+  fold [label="Inside each training fold only:\nmedian imputation, standardisation,\nclass weighting; patient bags &#8804; 500 cells", fillcolor="#FCEBD0"];
+  raw -> man -> qc -> split -> task;
+  task -> rs1 -> hed -> seg -> fe;
+  task -> rs2 -> enc;
+  fe -> fold; enc -> fold;
+}
