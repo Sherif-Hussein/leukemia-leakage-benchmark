@@ -1,0 +1,18 @@
+\begin{table*}[!t]
+\centering
+\caption{Performance and complexity on APL-AML (24 external patients). Time per patient assumes 500 cells on our CPU (2 vCPUs): Macenko normalization 0.071 s, CNN forward pass 0.051 s and engineered features 0.038 s per cell; classifier times are measured. Storage: bytes kept per cell after feature extraction. Parameters and training time refer to the patient-level classifier (including PCA fitting).}
+\label{tab:tradeoff}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccccccc}
+\toprule
+ & \multicolumn{7}{c}{Performance (external, fixed threshold)} & \multicolumn{4}{c}{Complexity} \\
+\cmidrule(lr){2-8}\cmidrule(lr){9-12}
+Pipeline & AUROC & Acc. & Recall & Missed & Spec. & F1 & NPV & Storage/cell & Parameters & Training (s) & Time/patient (s) \\
+\midrule
+Primary: Macenko + fine-tuned CNN + engineered, ensemble & 0.806 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 & 1.00 & 5,492 B & 4,038,033 & 631.00 & 80 \\
+Macenko + frozen CNN, no PCA & 0.701 & 0.75 & 0.92 & 1/12 & 0.58 & 0.79 & 0.88 & 5,120 B & 6,401 & 0.26 & 61 \\
+Secondary: Macenko + frozen CNN + PCA-64 & 0.639 & 0.71 & 0.92 & 1/12 & 0.50 & 0.76 & 0.86 & 256 B & 321 & 6.15 & 61 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

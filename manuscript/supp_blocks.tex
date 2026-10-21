@@ -1,0 +1,55 @@
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_training.pdf}
+\caption{Training dynamics on the Discovery cohort (mean $\pm$ SD over 5 folds $\times$ 3 seeds). (a)--(c) Gated attention MIL trained with AdamW at a constant learning rate of $2\times10^{-4}$: training loss (class-weighted binary cross-entropy), loss and AUROC on the held-out fold per epoch; triangles mark the epoch with the lowest held-out loss. (d) Cell-level LightGBM for T1 (learning rate 0.05): log-loss on training folds and on held-out patients per boosting round. (e), (f) Learning curves of the pooled patient model versus the number of training patients, on the held-out fold (dotted: training AUROC) and on the external cohort. Values in (e) and (f) are for single fold models, not the fold ensemble used in the tables, and are therefore slightly lower.}
+\label{fig:training}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_impact.pdf}
+\caption{Effect of design choices (top) and of removing each engineered feature group for blast detection (bottom) on external AUROC. Bars are 95\% confidence intervals from a paired patient-level bootstrap.}
+\label{fig:impact}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_segmentation.pdf}
+\caption{Segmentation behind the engineered features, shown on cells at the 25th and 75th percentile of each class list. Red: nucleus; green: basophilic region; blue tint: perinuclear ring. The upper lymphocyte and lower erythroblast illustrate failures in which the mask falls on neighboring red cells.}
+\label{fig:seg}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_confusion.pdf}
+\caption{Confusion matrices on the external cohort at the operating point fixed on Discovery for a sensitivity of at least 0.95. Missed APL patients are shown in red.}
+\label{fig:confusion}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_splits.pdf}
+\caption{Evaluation protocols. (a) Image-level splitting places cells of the same patient in training and test sets. (b) Patient-grouped splitting with an external cohort, used in this work; the external cohort is scored once.}
+\label{fig:splits}
+\end{figure*}
+
+\begin{table}[!t]
+\centering
+\caption{Computing environment and run times.}
+\label{tab:env}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Item & Specification \\
+\midrule
+Hardware & Intel Xeon 2.80\,GHz, 2 vCPUs, 7.8\,GB RAM, no GPU \\
+Software & Ubuntu 24.04.5 LTS; Python 3.13.16; PyTorch 2.14.1 (CPU); \\
+ & scikit-learn 1.9.1 \cite{pedregosa2011sklearn}; LightGBM 4.7.0; scikit-image 0.26.0; timm 1.0.30 \\
+Random seeds & 0, 1, 2 \\
+Engineered features & 16.1\,min for 25,724 cells (2 processes) \\
+EfficientNet-B0 embeddings & 51.2\,min for 25,724 cells (2 threads) \\
+Cell-level model, 5-fold CV & 11--40\,s (LR), 15--600\,s (LightGBM) \\
+Attention MIL, 5-fold CV & 33--61\,s per seed \\
+\bottomrule
+\end{tabular}}
+\end{table}

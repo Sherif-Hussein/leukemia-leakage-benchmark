@@ -109,15 +109,30 @@ REF_HE, REF_MAXC = macenko_fit(_ref_od)
 REF_IO = np.median([_bg(im) for im in map(load, ref_paths[:100]) if im is not None], axis=0)
 
 
-def macenko(im):
+_PP = {}
+
+
+def patient_params(pid, max_cells=20):
+    """Per-patient (per-slide) stain vectors: fitted once on pixels pooled from up to 20 of the patient's cells."""
+    if pid not in _PP:
+        paths = sub.path[sub.patient_id == pid].iloc[:max_cells]
+        od = np.concatenate([_od(im)[::3] for im in map(load, paths) if im is not None])
+        _PP[pid] = macenko_fit(od)
+    return _PP[pid]
+
+
+def macenko(im, params=None):
     od = _od(im)
-    HE, maxc = macenko_fit(od)
+    HE, maxc = params if params is not None else macenko_fit(od)
     if HE is None:
         return im
     C = np.linalg.lstsq(HE.T, od.T, rcond=None)[0]
     C = C * (REF_MAXC / (maxc + 1e-6))[:, None]
     out = REF_IO[:, None] * np.exp(-(REF_HE.T @ C))
     return np.clip(out.T.reshape(im.shape), 0, 255).astype(np.uint8)
+
+
+CUR_PID = [None]
 
 
 def preprocess(im, v):
@@ -131,6 +146,8 @@ def preprocess(im, v):
         return (np.clip(color.lab2rgb(lab), 0, 1) * 255).astype(np.uint8)
     if v == "macenko":
         return macenko(im)
+    if v == "macenko_pp":
+        return macenko(im, patient_params(CUR_PID[0]))
     if v == "reinhard":
         lab = color.rgb2lab(im / 255.0); mu, sd = lab.reshape(-1, 3).mean(0), lab.reshape(-1, 3).std(0) + 1e-6
         lab = (lab - mu) / sd * REF_SD + REF_MU
@@ -153,6 +170,7 @@ def embed(v):
         with torch.no_grad():
             Z[[i for i, _ in batch]] = model(x).numpy()
     for i, p in enumerate(sub.path):
+        CUR_PID[0] = sub.patient_id.iloc[i]
         im = load(p)
         if im is not None:
             im = Image.fromarray(preprocess(im, v)).resize((224, 224), Image.BICUBIC)

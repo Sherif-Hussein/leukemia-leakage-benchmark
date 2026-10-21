@@ -1,0 +1,25 @@
+\begin{table*}[!t]
+\centering
+\caption{Preprocessing before feature extraction (frozen EfficientNet-B0, up to 60 cells per patient, same folds and classifiers for every variant). Cohort shift: AUROC for assigning control-class cells to their cohort (0.5 = no detectable shift). Gap: development CV minus external AUROC. The rule fixed in advance selected the method that reduced the shift without lowering external performance. C-NMC, which showed no shift, is given for comparison.}
+\label{tab:preproc}
+\setlength{\tabcolsep}{3.2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+ & & \multicolumn{3}{c}{Cells (T1)} & \multicolumn{3}{c}{Patients (T3)} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+Preprocessing & Cohort shift & Dev.\ CV (SD; worst fold) & External & Gap & Dev.\ CV (SD; worst fold) & External & Gap \\
+\midrule
+\multicolumn{8}{l}{\emph{APL-AML (6,360 cells, 106 patients)}} \\
+None & 0.575 & 0.873 (0.036; 0.818) & 0.661 & 0.212 & 0.956 (0.047; 0.875) & 0.667 & 0.289 \\
+Edge sharpening (unsharp mask) & 0.561 & 0.887 (0.030; 0.834) & 0.631 & 0.256 & 0.963 (0.050; 0.875) & 0.639 & 0.324 \\
+Reinhard colour normalization & 0.524 & 0.873 (0.026; 0.836) & 0.644 & 0.228 & 0.972 (0.039; 0.896) & 0.681 & 0.291 \\
+\textbf{Macenko stain normalization (selected)} & 0.543 & 0.850 (0.037; 0.785) & 0.690 & 0.160 & 0.942 (0.052; 0.875) & 0.694 & 0.247 \\
+Macenko, stain vectors per patient & 0.554 & 0.859 (0.048; 0.775) & 0.615 & 0.244 & 0.925 (0.070; 0.833) & 0.611 & 0.314 \\
+\midrule
+\multicolumn{8}{l}{\emph{C-NMC (3,773 cells, 73 subjects; no shift detected)}} \\
+None & 0.549 & 0.832 (0.050; 0.753) & 0.746 & 0.086 & 0.889 (0.222; 0.444) & 0.882 & 0.007 \\
+Macenko stain normalization & 0.560 & 0.818 (0.058; 0.708) & 0.729 & 0.088 & 0.861 (0.238; 0.389) & 0.857 & 0.004 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

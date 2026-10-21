@@ -1,0 +1,25 @@
+{
+  "manifest": "manifests/apl_aml.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "weights": "weights/efficientnet_b0_ra-3dd342df.pth",
+  "cache_file": "features/apl_aml_effb0_block4.npy",
+  "cache": false,
+  "task": "apl_cell_blast",
+  "splits": [
+    "grouped"
+  ],
+  "seed": 0,
+  "epochs": 6,
+  "lr": 0.0003,
+  "batch_size": 128,
+  "max_train": 5000,
+  "cv_where": [
+    "cohort=Discovery"
+  ],
+  "test_where": [
+    "cohort=Validation"
+  ],
+  "n_boot": 2000,
+  "threads": 1,
+  "out": "results/finetune_t2"
+}

@@ -1,0 +1,38 @@
+\begin{table*}[!t]
+\centering
+\caption{What each addition changes on new patients (external sets). Each block starts from a frozen ImageNet CNN and adds one component at a time; $\Delta$ is the change in AUROC relative to the first row of the block. Threshold metrics at the operating point fixed on development data (target recall 0.95).}
+\label{tab:ladder}
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllccccccc}
+\toprule
+Dataset & Level & Model & AUROC & $\Delta$AUROC & Accuracy & Recall & Missed & Specificity & F1 \\
+\midrule
+APL-AML & Cell & Frozen CNN + LR & 0.694 & -- & 0.56 & 0.81 & -- & 0.43 & 0.56 \\
+ &  & Frozen CNN + engineered (fusion) & 0.734 & +0.040 & 0.62 & 0.78 & -- & 0.54 & 0.59 \\
+ &  & + fine-tuning (average pooling) & 0.773 & +0.079 & 0.45 & 1.00 & -- & 0.17 & 0.55 \\
+ &  & + fine-tuning + Macenko & 0.752 & +0.058 & 0.44 & 0.99 & -- & 0.15 & 0.55 \\
+\midrule
+APL-AML & Patient & Frozen CNN, pooled + LR & 0.708 & -- & 0.67 & 0.67 & 4/12 & 0.67 & 0.67 \\
+ &  & + PCA (64 components) & 0.792 & +0.083 & 0.62 & 0.50 & 6/12 & 0.75 & 0.57 \\
+ &  & Frozen CNN + Macenko & 0.701 & -0.007 & 0.75 & 0.92 & 1/12 & 0.58 & 0.79 \\
+ &  & Frozen CNN + Macenko + PCA-64 (secondary) & 0.639 & -0.069 & 0.71 & 0.92 & 1/12 & 0.50 & 0.76 \\
+ &  & Fine-tuned CNN, mean of cells & 0.778 & +0.069 & 0.75 & 0.83 & 2/12 & 0.67 & 0.77 \\
+ &  & Fine-tuned CNN + Macenko & 0.771 & +0.062 & 0.67 & 0.83 & 2/12 & 0.50 & 0.71 \\
+ &  & Engineered, pooled + LR & 0.753 & +0.045 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 \\
+ &  & Engineered, attention MIL & 0.809 & +0.101 & 0.50 & 1.00 & 0/12 & 0.00 & 0.67 \\
+ &  & Primary: ensemble (engineered + fine-tuned + Macenko) & 0.806 & +0.097 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 \\
+\midrule
+C-NMC & Cell & Frozen CNN + LR & 0.775 & -- & 0.79 & 0.96 & -- & 0.43 & 0.87 \\
+ &  & Frozen CNN + engineered (fusion) & 0.817 & +0.042 & 0.83 & 0.95 & -- & 0.54 & 0.88 \\
+ &  & + fine-tuning (average pooling) & 0.841 & +0.067 & 0.81 & 0.99 & -- & 0.42 & 0.88 \\
+\midrule
+C-NMC & Patient & Frozen CNN, pooled + LR & 0.908 & -- & 0.84 & 1.00 & 0/17 & 0.64 & 0.87 \\
+ &  & + PCA (64 components) & 0.853 & -0.055 & 0.74 & 0.94 & 1/17 & 0.50 & 0.80 \\
+ &  & Fine-tuned CNN, mean of cells & 0.962 & +0.055 & 0.81 & 1.00 & 0/17 & 0.57 & 0.85 \\
+ &  & Engineered, pooled + LR & 0.935 & +0.027 & 0.87 & 0.94 & 1/17 & 0.79 & 0.89 \\
+ &  & Engineered, attention MIL & 0.905 & -0.002 & 0.77 & 0.88 & 2/17 & 0.64 & 0.81 \\
+ &  & Primary: ensemble (engineered + fine-tuned) & 0.960 & +0.053 & 0.87 & 0.94 & 1/17 & 0.79 & 0.89 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

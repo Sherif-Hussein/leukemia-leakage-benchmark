@@ -629,7 +629,7 @@ if (R / "finetune_t1" / "summary.csv").exists():
                 fpat[nm] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) else v) for k, v in q.iloc[0].to_dict().items()}
     facts["finetune_patient"] = fpat
     L = [r"\begin{table*}[!t]", r"\centering",
-         r"\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{tab:hparams}; one seed); the other models are averaged over three seeds. Inflation: image-level CV AUROC minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}",
+         r"\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Inflation: image-level CV AUROC minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}",
          r"\label{tab:finetune}", r"\setlength{\tabcolsep}{3.5pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
          r"Task & Model & Image CV & Grouped CV & External [95\% CI] & Inflation & Recall & Spec. & F1 \\", r"\midrule"]
     for t, grp in ft.groupby("task", sort=False):
@@ -821,7 +821,7 @@ def ladder_rows():
                     add(ds, "cell", "Frozen CNN + LR", r["ext"], r["acc"], r["sens"], np.nan, r["spec"], r["f1"], np.nan)
                 if r["model"] == "Fusion + LR":
                     add(ds, "cell", "Frozen CNN + engineered (fusion)", r["ext"], r["acc"], r["sens"], np.nan, r["spec"], r["f1"], np.nan)
-        for d, lab in [(ftdir, "+ fine-tuning (average pooling)"), (attndir, "+ fine-tuning with attention pooling")]:
+        for d, lab in [(ftdir, "+ fine-tuning (average pooling)"), (ftdir + "_macenko", "+ fine-tuning + Macenko")]:
             f = R / d / "summary.csv"
             if f.exists():
                 q = pd.read_csv(f); c = q[q.level == "cell"].iloc[0]
@@ -834,16 +834,21 @@ def ladder_rows():
             for c, lab in [("eff_raw_nw", "Frozen CNN, pooled + LR"), ("eff_pca64_nw", "+ PCA (64 components)")]:
                 if c in q.index:
                     r = q.loc[c]; add(ds, "patient", lab, r.ext_auroc, r.sens95_acc, r.sens95_sens, r.sens95_fn, r.sens95_spec, r.sens95_f1, npos)
-        for d, lab in [(ftdir, "Fine-tuned CNN, mean of cells"), (attndir, "+ attention pooling")]:
+        if ds == "APL-AML" and (R / "apl_fe_macenko" / "feature_engineering.csv").exists():
+            q = pd.read_csv(R / "apl_fe_macenko" / "feature_engineering.csv").set_index("config")
+            for c, lab in [("eff_raw_nw", "Frozen CNN + Macenko"), ("eff_pca64_nw", "Frozen CNN + Macenko + PCA-64 (secondary)")]:
+                if c in q.index:
+                    r = q.loc[c]; add(ds, "patient", lab, r.ext_auroc, r.sens95_acc, r.sens95_sens, r.sens95_fn, r.sens95_spec, r.sens95_f1, npos)
+        for d, lab in [(ftdir, "Fine-tuned CNN, mean of cells"), (ftdir + "_macenko", "Fine-tuned CNN + Macenko"), (attndir, "+ attention pooling")]:
             f = R / d / "summary.csv"
             if f.exists():
                 q = pd.read_csv(f); q = q[q.level == "patient"]
                 if len(q):
                     c = q.iloc[0]; add(ds, "patient", lab, c.ext_auroc, c.ext_acc, c.ext_sens, c.ext_fn, c.ext_spec, c.ext_f1, npos)
-        f = R / ("ensemble_apl" if ds == "APL-AML" else "ensemble_cnmc") / "ensemble.csv"
+        f = R / ("ensemble_apl_macenko" if ds == "APL-AML" and (R / "ensemble_apl_macenko" / "ensemble.csv").exists() else "ensemble_apl" if ds == "APL-AML" else "ensemble_cnmc") / "ensemble.csv"
         if f.exists():
             q = pd.read_csv(f).set_index("model")
-            for m, lab in [("P1", "Engineered, pooled + LR"), ("P4", "Engineered, attention MIL"), ("Ensemble", "+ ensemble (engineered + fine-tuned)")]:
+            for m, lab in [("P1", "Engineered, pooled + LR"), ("P4", "Engineered, attention MIL"), ("Ensemble", "Primary: ensemble (engineered + fine-tuned" + (" + Macenko)" if ds == "APL-AML" else ")"))]:
                 r = q.loc[m]; add(ds, "patient", lab, r.ext_auroc, r.acc, r.sens, r.fn, r.spec, r.f1, npos)
     return pd.DataFrame(rows)
 
@@ -877,4 +882,132 @@ if len(LD):
     np.atleast_1d(ax)[0].set_ylabel("External set"); np.atleast_1d(ax)[0].legend(frameon=False, fontsize=5.8, loc="lower left")
     fig.tight_layout(); fig.savefig(OUT / "figures" / "fig_ladder.pdf"); fig.savefig(OUT / "figures" / "fig_ladder.png", dpi=200); plt.close(fig)
     print(LD.round(3).to_string())
+(TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))
+
+# ================================================================== REVISION 1, part 2: preprocessing, epochs, trade-off, C-NMC EDA
+import shutil
+# ---- preprocessing comparison (frozen CNN on the pilot subset; APL-AML) + C-NMC check
+pp = []
+for d, nm in [("preproc_test", None), ("preproc_reinhard", None), ("preproc_macenko", None), ("preproc_macenko_pp", None)]:
+    f = R / d / "preproc_test.csv"
+    if f.exists():
+        pp.append(pd.read_csv(f))
+if pp:
+    PP = pd.concat(pp).drop_duplicates("variant", keep="last").set_index("variant")
+    PP.to_csv(TAB / "preprocessing.csv"); facts["preprocessing"] = PP.round(4).reset_index().to_dict("records")
+    PN = {"none": "None", "unsharp": "Edge sharpening (unsharp mask)", "reinhard": "Reinhard colour normalization",
+          "macenko": r"\textbf{Macenko stain normalization (selected)}", "macenko_pp": "Macenko, stain vectors per patient"}
+    cn = pd.read_csv(R / "preproc_cnmc" / "preproc_test.csv").set_index("variant") if (R / "preproc_cnmc" / "preproc_test.csv").exists() else None
+    L = [r"\begin{table*}[!t]", r"\centering",
+         r"\caption{Preprocessing before feature extraction (frozen EfficientNet-B0, up to 60 cells per patient, same folds and classifiers for every variant). Cohort shift: AUROC for assigning control-class cells to their cohort (0.5 = no detectable shift). Gap: development CV minus external AUROC. The rule fixed in advance selected the method that reduced the shift without lowering external performance. C-NMC, which showed no shift, is given for comparison.}",
+         r"\label{tab:preproc}", r"\setlength{\tabcolsep}{3.2pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lccccccc}", r"\toprule",
+         r" & & \multicolumn{3}{c}{Cells (T1)} & \multicolumn{3}{c}{Patients (T3)} \\", r"\cmidrule(lr){3-5}\cmidrule(lr){6-8}",
+         r"Preprocessing & Cohort shift & Dev.\ CV (SD; worst fold) & External & Gap & Dev.\ CV (SD; worst fold) & External & Gap \\", r"\midrule",
+         r"\multicolumn{8}{l}{\emph{APL-AML (6,360 cells, 106 patients)}} \\"]
+    for v in ["none", "unsharp", "reinhard", "macenko", "macenko_pp"]:
+        if v not in PP.index:
+            continue
+        r = PP.loc[v]
+        L.append(f"{PN[v]} & {r.cohort_id_auroc:.3f} & {r.cell_cv_mean:.3f} ({r.cell_cv_sd:.3f}; {r.cell_cv_min:.3f}) & {r.cell_ext:.3f} & {r.cell_cv_mean - r.cell_ext:.3f} & "
+                 f"{r.patient_cv_mean:.3f} ({r.patient_cv_sd:.3f}; {r.patient_cv_min:.3f}) & {r.patient_ext:.3f} & {r.patient_cv_mean - r.patient_ext:.3f} \\\\")
+    if cn is not None:
+        L += [r"\midrule", r"\multicolumn{8}{l}{\emph{C-NMC (3,773 cells, 73 subjects; no shift detected)}} \\"]
+        for v in ["none", "macenko"]:
+            r = cn.loc[v]
+            L.append(f"{PN[v].replace(chr(92)+'textbf{','').replace(' (selected)}','')} & {r.cohort_id_auroc:.3f} & {r.cell_cv_mean:.3f} ({r.cell_cv_sd:.3f}; {r.cell_cv_min:.3f}) & {r.cell_ext:.3f} & {r.cell_cv_mean - r.cell_ext:.3f} & "
+                     f"{r.patient_cv_mean:.3f} ({r.patient_cv_sd:.3f}; {r.patient_cv_min:.3f}) & {r.patient_ext:.3f} & {r.patient_cv_mean - r.patient_ext:.3f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
+    (TAB / "tab_preproc.tex").write_text("\n".join(L))
+    print(PP[["cohort_id_auroc", "cell_cv_mean", "cell_ext", "patient_cv_mean", "patient_ext"]].round(3).to_string())
+
+# ---- fixed epochs vs nested early stopping (attention MIL)
+es_rows = []
+for ds, fx, es in [("APL-AML", "v2_patient", "v2_patient_es"), ("C-NMC", "cnmc_patient", "cnmc_patient_es")]:
+    if not (R / es / "summary.csv").exists():
+        continue
+    a_ = pd.read_csv(R / fx / "summary.csv"); b_ = pd.read_csv(R / es / "summary.csv")
+    ce = pd.read_csv(R / es / "chosen_epochs.csv") if (R / es / "chosen_epochs.csv").exists() else None
+    for m, nm in [("P4", "Engineered"), ("P5", "EfficientNet-B0"), ("P6", "Fusion")]:
+        x = a_[(a_.model == m) & (a_["eval"] == "test")]; z = b_[(b_.model == m) & (b_["eval"] == "test")]
+        if x.empty or z.empty:
+            continue
+        x, z = x.iloc[0], z.iloc[0]
+        cvx = a_[(a_.model == m) & (a_["eval"] == "cv")].auroc; cvz = b_[(b_.model == m) & (b_["eval"] == "cv")].auroc
+        ep = ce[ce.model == m].epochs if ce is not None else pd.Series(dtype=float)
+        es_rows.append(dict(dataset=ds, features=nm, fixed_ext=x.auroc, es_ext=z.auroc, fixed_cv_sd=cvx.std(), es_cv_sd=cvz.std(),
+                            fixed_recall=x.sens, es_recall=z.sens, fixed_f1=x.f1, es_f1=z.f1, fixed_ece=x.ece, es_ece=z.ece,
+                            ep_med=ep.median() if len(ep) else np.nan, ep_min=ep.min() if len(ep) else np.nan, ep_max=ep.max() if len(ep) else np.nan))
+if es_rows:
+    ES = pd.DataFrame(es_rows); ES.to_csv(TAB / "early_stopping.csv", index=False); facts["early_stopping"] = ES.round(4).to_dict("records")
+    L = [r"\begin{table}[!t]", r"\centering",
+         r"\caption{Attention MIL trained for a fixed 40 epochs or with the number of epochs chosen by nested 3-fold CV inside each training fold (lowest mean validation loss). External AUROC, recall, F1 and calibration error (ECE); SD: spread of development CV AUROC across seeds.}",
+         r"\label{tab:epochs}", r"\setlength{\tabcolsep}{2.2pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
+         r" & & \multicolumn{2}{c}{External AUROC} & \multicolumn{2}{c}{F1} & \multicolumn{2}{c}{ECE} & Chosen epochs \\", r"\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}",
+         r"Dataset & Features & Fixed & Nested & Fixed & Nested & Fixed & Nested & median (range) \\", r"\midrule"]
+    for ds, grp in ES.groupby("dataset", sort=False):
+        for i, r in enumerate(grp.itertuples()):
+            ep = "--" if np.isnan(r.ep_med) else f"{r.ep_med:.0f} ({r.ep_min:.0f}--{r.ep_max:.0f})"
+            L.append(f"{ds if i == 0 else ''} & {r.features} & {r.fixed_ext:.3f} & {r.es_ext:.3f} & {r.fixed_f1:.2f} & {r.es_f1:.2f} & {r.fixed_ece:.2f} & {r.es_ece:.2f} & {ep} \\\\")
+        L.append(r"\midrule")
+    L[-1] = r"\bottomrule"
+    L += [r"\end{tabular}}", r"\end{table}"]
+    (TAB / "tab_epochs.tex").write_text("\n".join(L))
+    print(ES.round(3).to_string())
+
+# ---- C-NMC EDA (composition table + figure)
+if (R / "cnmc_eda" / "class_balance.csv").exists():
+    cb = pd.read_csv(R / "cnmc_eda" / "class_balance.csv")
+    shutil.copy(R / "cnmc_eda" / "fig_eda.pdf", OUT / "figures" / "fig_eda_cnmc.pdf"); shutil.copy(R / "cnmc_eda" / "fig_eda.png", OUT / "figures" / "fig_eda_cnmc.png")
+    cid = pd.read_csv(R / "cnmc_eda" / "cohort_id.csv"); facts["cnmc_eda_cohort_id"] = cid.round(4).to_dict("records")
+    sh = pd.read_csv(R / "cnmc_eda" / "shift_smd.csv"); facts["cnmc_eda_shift_by_group"] = sh.groupby("group").abs_smd.median().round(4).to_dict()
+    L = [r"\begin{table}[!t]", r"\centering", r"\caption{Composition of the C-NMC 2019 data used here (official training folds).}", r"\label{tab:dataset_cnmc}",
+         r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llrrr}", r"\toprule", r"Set & Class & Subjects & Cells & Cells per subject, median (range) \\", r"\midrule"]
+    for r in cb.itertuples():
+        L.append(f"{r.cohort} & {'ALL' if r.diagnosis == 'ALL' else 'Normal B cells'} & {r.patients} & {r.cells:,} & {getattr(r, '_5'):.0f} ({r.min:.0f}--{r.max:.0f}) \\\\")
+    L += [r"\midrule", f"Total & & {cb.patients.sum()} & {cb.cells.sum():,} & \\\\", r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
+    (TAB / "tab_dataset_cnmc.tex").write_text("\n".join(L))
+(TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))
+
+# ================================================================== performance / complexity trade-off (APL-AML)
+# measured on our CPU (2 vCPUs): seconds per cell for each image-level step
+T_NORM = 30.5 * 60 / 25724          # Macenko, per cell, 1 thread
+T_CNN = 21.9 * 60 / 25724           # EfficientNet-B0 forward pass, per cell, 2 threads
+T_ENG = 16.1 * 60 / 25724           # engineered features, per cell, 2 processes
+N_CELLS = 500
+PRIMARY_TRAIN_S = 631.0   # mean seconds per fold of fine-tuning (log of finetune_t1_macenko); excludes the one-off cache (25 min)
+cost = {}
+for k, d in [(0, "cost_k0"), (64, "cost_k64")]:
+    f = R / d / "cost.csv"
+    if f.exists():
+        cost[k] = pd.read_csv(f).iloc[0]
+fm = R / "apl_fe_macenko" / "feature_engineering.csv"
+if fm.exists() and cost:
+    fe_m = pd.read_csv(fm).set_index("config")
+    rows = []
+    def perf(r):
+        return dict(auroc=r.ext_auroc, acc=r.sens95_acc, sens=r.sens95_sens, fn=r.sens95_fn, spec=r.sens95_spec, f1=r.sens95_f1, npv=r.sens95_npv)
+    if (R / "ensemble_apl_macenko" / "ensemble.csv").exists():
+        e = pd.read_csv(R / "ensemble_apl_macenko" / "ensemble.csv").set_index("model").loc["Ensemble"]
+        rows.append(dict(model="Primary: Macenko + fine-tuned CNN + engineered, ensemble", auroc=e.ext_auroc, acc=e.acc, sens=e.sens, fn=e.fn, spec=e.spec, f1=e.f1, npv=e.npv,
+                         storage=5120 + 93 * 4, params=4007548 + 1281 + (93 * 128 + 128 + 2 * (128 * 64 + 64) + 64 + 1 + 128 + 1) + (5 * 93 + 1),
+                         train_s=PRIMARY_TRAIN_S,
+                         t_patient=N_CELLS * (T_NORM + T_CNN + T_ENG) + (cost[0].mil_predict_ms_per_patient + cost[0].lr_predict_ms_per_patient) / 1000))
+    for c, lab, k in [("eff_raw_nw", "Macenko + frozen CNN, no PCA", 0), ("eff_pca64_nw", "Secondary: Macenko + frozen CNN + PCA-64", 64)]:
+        if c in fe_m.index and k in cost:
+            q = cost[k]
+            rows.append(dict(model=lab, **perf(fe_m.loc[c]), storage=q.storage_bytes_per_cell, params=q.lr_params, train_s=q.lr_train_s + q.pca_fit_s,
+                             t_patient=N_CELLS * (T_NORM + T_CNN) + (q.pca_projection_ms_per_patient + q.lr_predict_ms_per_patient) / 1000))
+    TO = pd.DataFrame(rows); TO.to_csv(TAB / "tradeoff.csv", index=False); facts["tradeoff"] = TO.round(4).to_dict("records")
+    facts["cost_steps_s_per_cell"] = dict(norm=T_NORM, cnn=T_CNN, eng=T_ENG)
+    L = [r"\begin{table*}[!t]", r"\centering",
+         r"\caption{Performance and complexity on APL-AML (24 external patients). Time per patient assumes 500 cells on our CPU (2 vCPUs): Macenko normalization " + f"{T_NORM:.3f}" + r" s, CNN forward pass " + f"{T_CNN:.3f}" + r" s and engineered features " + f"{T_ENG:.3f}" + r" s per cell; classifier times are measured. Storage: bytes kept per cell after feature extraction. Parameters and training time refer to the patient-level classifier (including PCA fitting).}",
+         r"\label{tab:tradeoff}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lccccccccccc}", r"\toprule",
+         r" & \multicolumn{7}{c}{Performance (external, fixed threshold)} & \multicolumn{4}{c}{Complexity} \\", r"\cmidrule(lr){2-8}\cmidrule(lr){9-12}",
+         r"Pipeline & AUROC & Acc. & Recall & Missed & Spec. & F1 & NPV & Storage/cell & Parameters & Training (s) & Time/patient (s) \\", r"\midrule"]
+    for r in TO.itertuples():
+        L.append(f"{r.model} & {r.auroc:.3f} & {r.acc:.2f} & {r.sens:.2f} & {int(r.fn)}/12 & {r.spec:.2f} & {r.f1:.2f} & {r.npv:.2f} & {int(r.storage):,} B & "
+                 + ("--" if np.isnan(r.params) else f"{int(r.params):,}") + " & " + ("--" if np.isnan(r.train_s) else f"{r.train_s:.2f}") + f" & {r.t_patient:.0f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
+    (TAB / "tab_tradeoff.tex").write_text("\n".join(L))
+    print(TO.round(3).to_string())
 (TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))

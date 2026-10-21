@@ -32,3 +32,11 @@ The external (Validation) cohort is **not** used for this decision.
 ## 5. Disclosure
 
 The preprocessing comparison (sharpening, CLAHE, Reinhard, Macenko) and a pilot of Macenko + PCA-64 were evaluated on a subset that included the APL-AML Validation cohort. This is disclosed in the paper. The choice of the primary model above does not rest on those external pilot numbers: Macenko is applied by the label-free shift rule, and the primary model is the configuration that was most consistent across both datasets before the pilot (fine-tuning and engineered features). C-NMC and the pooled analysis provide confirmation outside the APL-AML Validation cohort.
+
+## 6. Outcome of the Section 4 rule (recorded 2026-10-21, before the full run)
+
+Per-patient vs per-cell Macenko on the pilot subset (development data only):
+cohort-identification AUROC 0.554 vs 0.543 (criterion a: pass); Discovery CV AUROC cells 0.859 vs 0.850 (pass),
+patients 0.925 vs 0.942 (criterion b: **fail**, -0.017). **Decision: per-cell Macenko.**
+Cost: per-cell normalization adds about 0.14 s per cell (about 68 s per 500-cell patient) on one CPU thread;
+per-patient would add about 1 s per patient. This trade-off is reported in the paper.

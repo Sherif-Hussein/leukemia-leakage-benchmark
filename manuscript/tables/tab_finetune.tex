@@ -1,23 +1,29 @@
-\begin{table}[!t]
+\begin{table*}[!t]
 \centering
-\caption{Fine-tuned versus frozen CNN features at cell level (APL-AML). The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{tab:hparams}); one seed. Recall, specificity and F1 on the external cohort at the operating point fixed on Discovery.}
+\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Inflation: image-level CV AUROC minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}
 \label{tab:finetune}
-\setlength{\tabcolsep}{3pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{llcccccc}
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llccccccc}
 \toprule
-Task & Model & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 \\
+Task & Model & Image CV & Grouped CV & External [95\% CI] & Inflation & Recall & Spec. & F1 \\
 \midrule
-T1 & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.69 & 0.55 & 0.54 \\
- & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.73 & 0.46 & 0.52 \\
- & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & 0.81 & 0.43 & 0.56 \\
- & Fusion + LR & 0.985 & 0.901 & 0.734 [0.595, 0.848] & 0.78 & 0.54 & 0.59 \\
- & Fine-tuned EfficientNet-B0 & -- & 0.875 & \textbf{0.773 [0.612, 0.890]} & 1.00 & 0.17 & 0.55 \\
+T1 APL-AML, diagnosis on cells & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & +0.318 & 0.69 & 0.55 & 0.54 \\
+ & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & +0.280 & 0.73 & 0.46 & 0.52 \\
+ & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & +0.281 & 0.81 & 0.43 & 0.56 \\
+ & Fusion + LR & 0.985 & 0.901 & 0.734 [0.595, 0.848] & +0.250 & 0.78 & 0.54 & 0.59 \\
+ & Fine-tuned EfficientNet-B0 & -- & 0.875 & \textbf{0.773 [0.612, 0.890]} & -- & 1.00 & 0.17 & 0.55 \\
 \midrule
-T2 & Engineered + LightGBM & 0.978 & 0.954 & \textbf{0.957 [0.931, 0.977]} & 0.99 & 0.62 & 0.58 \\
- & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & 0.98 & 0.70 & 0.63 \\
- & EfficientNet-B0 + LR & 0.956 & 0.926 & 0.920 [0.874, 0.956] & 0.96 & 0.64 & 0.58 \\
- & Fusion + LR & 0.964 & 0.940 & 0.931 [0.894, 0.961] & 0.96 & 0.68 & 0.61 \\
+T2 APL-AML, blast detection & Engineered + LightGBM & 0.978 & 0.954 & 0.957 [0.931, 0.977] & +0.021 & 0.99 & 0.62 & 0.58 \\
+ & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & +0.013 & 0.98 & 0.70 & 0.63 \\
+ & EfficientNet-B0 + LR & 0.956 & 0.926 & 0.920 [0.874, 0.956] & +0.036 & 0.96 & 0.64 & 0.58 \\
+ & Fusion + LR & 0.964 & 0.940 & 0.931 [0.894, 0.961] & +0.033 & 0.96 & 0.68 & 0.61 \\
+ & Fine-tuned EfficientNet-B0 & -- & 0.968 & \textbf{0.960 [0.928, 0.981]} & -- & 0.95 & 0.83 & 0.74 \\
+\midrule
+T4 C-NMC, cells & Engineered + LR & 0.933 & 0.864 & 0.840 [0.730, 0.902] & +0.093 & 0.95 & 0.58 & 0.89 \\
+ & EfficientNet-B0 + LR & 0.912 & 0.834 & 0.775 [0.640, 0.859] & +0.137 & 0.96 & 0.43 & 0.87 \\
+ & Fusion + LR & 0.939 & 0.864 & 0.817 [0.692, 0.891] & +0.122 & 0.95 & 0.54 & 0.88 \\
+ & Fine-tuned EfficientNet-B0 & -- & 0.853 & \textbf{0.841 [0.715, 0.917]} & -- & 0.99 & 0.42 & 0.88 \\
 \bottomrule
 \end{tabular}}
-\end{table}
+\end{table*}

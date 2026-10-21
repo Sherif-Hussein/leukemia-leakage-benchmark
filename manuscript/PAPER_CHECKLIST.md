@@ -17,3 +17,9 @@ Every revision of the manuscript must contain, clearly and in humanized wording:
 7. **Feature engineering** used and its impact, before and after.
 
 Also: IEEE format, proper citations, block diagrams kept up to date, honest (no leakage, external sets untouched).
+8. **End-to-end pipeline diagrams**: one per pipeline (primary and secondary), from input image to output
+   decision, every step labelled with its setting and measured cost per patient.
+9. **PCA framed as a complexity/performance trade-off** (agreed 21 Oct): PCA-64 is used to reduce complexity
+   (storage, parameters, training time, memory), NOT to improve accuracy. Report a trade-off table
+   (Macenko without PCA vs Macenko + PCA-64, primary as reference) with performance AND cost per step,
+   and state the cost in performance explicitly (F1 -0.03, AUROC -0.06, recall unchanged on APL-AML).

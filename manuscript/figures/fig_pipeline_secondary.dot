@@ -1,0 +1,19 @@
+digraph S {
+  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=10, nodesep=0.18, ranksep=0.28, margin=0.04];
+  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=8.5];
+  edge  [color="#5B6575", arrowsize=0.55];
+  in   [label="Input\npatient's single-cell\nimages (up to 500)", fillcolor="#DCE6F5"];
+  qc   [label="Quality control"];
+  shift[label="Shift test\n(label-free)", fillcolor="#FCEBD0", shape=diamond, style="filled"];
+  mac  [label="Macenko stain\nnormalization\n(per cell)", fillcolor="#E4F1E4"];
+  cnn  [label="Frozen EfficientNet-B0\n1,280-d per cell\n(no training)"];
+  pca  [label="PCA-64\n(natural scale)\n20x less storage", fillcolor="#E4F1E4"];
+  pool [label="Pooled mean, SD,\nP10/50/90 (320 inputs)"];
+  lr   [label="Logistic regression\n321 parameters"];
+  thr  [label="Threshold for\nrecall >= 0.95\n(development data)", fillcolor="#FCEBD0"];
+  out  [label="Output\nAPL suspected / not", fillcolor="#DCE6F5"];
+  in -> qc -> shift;
+  shift -> mac [label=" yes", fontsize=7.5];
+  shift -> cnn [label=" no", fontsize=7.5, style=dashed];
+  mac -> cnn -> pca -> pool -> lr -> thr -> out;
+}

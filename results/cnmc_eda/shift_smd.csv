@@ -1,0 +1,94 @@
+feature,group,smd_aml,smd_apl,abs_smd
+lbp_P16R2_9,Local binary patterns,-0.53308094,-0.054029796,0.29355538
+lbp_P16R2_8,Local binary patterns,-0.5240253,0.008328395,0.26617685
+nuc_b_mean,Stain and colour,0.4324529,0.08911373,0.2607833
+H_ratio_nuc_cyto,Stain and colour,-0.48062223,0.027377665,0.25399995
+nuc_sat_mean,Stain and colour,-0.4873667,-0.0046067876,0.24598674
+bcell_area,Basophilic region,0.37778568,0.093891226,0.23583846
+nuc_area,Nuclear shape,0.374317,0.09501026,0.23466362
+bcell_perimeter,Basophilic region,0.40962845,0.059487626,0.23455805
+nuc_perimeter,Nuclear shape,0.39464566,0.06054294,0.2275943
+bcell_major_axis,Basophilic region,0.3742697,0.07873853,0.22650412
+nuc_major_axis,Nuclear shape,0.3714306,0.08069635,0.22606348
+lbp_P16R2_13,Local binary patterns,0.42584568,-0.014604448,0.22022507
+nuc_H_std,Stain and colour,-0.25223333,0.17107555,0.21165444
+nucleoli_area,Nucleoli and granules,-0.2365209,-0.18008006,0.20830047
+lbp_P8R1_4,Local binary patterns,-0.37928876,-0.03527324,0.207281
+lbp_P16R2_17,Local binary patterns,0.34241432,0.06373278,0.20307355
+lbp_P16R2_1,Local binary patterns,0.31307808,0.08826938,0.20067373
+bcell_circularity,Basophilic region,-0.36681163,-0.0152128115,0.19101222
+glcm_contrast_d1,Chromatin texture,0.3133472,0.0653188,0.18933299
+nuc_circularity,Nuclear shape,-0.35691404,-0.019448314,0.18818118
+lbp_P16R2_0,Local binary patterns,0.35547858,0.0150951715,0.18528688
+lbp_P16R2_14,Local binary patterns,0.32608223,0.03039112,0.17823668
+L_diff_nuc_cyto,Stain and colour,-0.294923,0.061549447,0.17823623
+nuc_E_mean,Stain and colour,-0.3357584,0.018372219,0.1770653
+nuc_H_mean,Stain and colour,-0.33057743,-0.008692061,0.16963474
+lbp_P16R2_16,Local binary patterns,0.3017269,0.03366765,0.16769728
+glcm_contrast_d2,Chromatin texture,0.27042633,0.06418336,0.16730484
+lbp_P16R2_3,Local binary patterns,0.3180695,0.0022878482,0.16017866
+nuc_extent,Nuclear shape,-0.31846303,-0.00033482257,0.15939893
+bcell_extent,Basophilic region,-0.31288236,0.005796758,0.15933956
+nuc_L_mean,Stain and colour,0.3051538,-0.011647301,0.15840055
+nuc_eccentricity,Nuclear shape,0.24073263,0.07202415,0.15637839
+bcell_solidity,Basophilic region,-0.2911857,0.01727137,0.15422854
+bcell_eccentricity,Basophilic region,0.23833251,0.068994045,0.15366328
+lbp_P16R2_2,Local binary patterns,0.28226122,-0.022565858,0.15241355
+nuc_solidity,Nuclear shape,-0.29223922,0.010708314,0.15147376
+lbp_P8R1_1,Local binary patterns,0.23023103,0.06806194,0.14914648
+nuc_axis_ratio,Nuclear shape,-0.23458546,-0.06024581,0.14741564
+bcell_axis_ratio,Basophilic region,-0.23278798,-0.058412243,0.14560011
+cyto_b_mean,Stain and colour,-0.27888662,-0.008824894,0.14385575
+lbp_P16R2_15,Local binary patterns,0.24344489,0.040220812,0.14183286
+cyto_H_mean,Stain and colour,0.23604268,-0.045536056,0.14078936
+nuc_E_std,Stain and colour,-0.25525334,-0.02204148,0.1386474
+cyto_L_mean,Stain and colour,-0.21102074,0.062233496,0.13662712
+cyto_b_std,Stain and colour,0.2668944,0.004563626,0.13572901
+nuc_b_std,Stain and colour,0.21897048,-0.04764648,0.13330849
+lbp_P16R2_12,Local binary patterns,0.2527352,-0.0138611505,0.13329817
+glcm_correlation_d1,Chromatin texture,-0.22540328,0.03240929,0.12890628
+lbp_P8R1_9,Local binary patterns,0.1693077,0.08729497,0.12830134
+lbp_P16R2_4,Local binary patterns,0.21540773,-0.04024017,0.12782395
+cyto_H_std,Stain and colour,0.23883611,-0.015435273,0.1271357
+cyto_L_std,Stain and colour,0.23113166,-0.01698825,0.12405995
+cyto_a_std,Stain and colour,0.23471677,-0.004671929,0.11969435
+cyto_sat_mean,Stain and colour,0.17185938,-0.05984857,0.11585398
+cyto_sat_std,Stain and colour,0.22536813,-0.0061042504,0.11573619
+cyto_a_mean,Stain and colour,0.17046835,-0.05718965,0.113829
+nc_ratio_basophilic,Basophilic region,-0.18858573,0.038192056,0.113388896
+nuc_L_std,Stain and colour,0.12918206,0.09566628,0.112424165
+cyto_E_std,Stain and colour,0.19545375,0.024453,0.10995337
+lbp_P8R1_0,Local binary patterns,0.14488077,0.07072508,0.10780293
+lbp_P16R2_7,Local binary patterns,-0.1665517,-0.028628096,0.097589895
+lbp_P8R1_3,Local binary patterns,0.13533315,-0.04986654,0.09259985
+glcm_homogeneity_d4,Chromatin texture,0.1464568,0.034246456,0.09035163
+glcm_correlation_d2,Chromatin texture,-0.14005834,0.0391017,0.08958002
+glcm_contrast_d4,Chromatin texture,0.1329479,0.041826315,0.087387115
+glcm_homogeneity_d2,Chromatin texture,0.14149049,0.031069895,0.08628019
+basophilic_rim,Basophilic region,0.13678792,-0.034886774,0.08583735
+lbp_P8R1_8,Local binary patterns,0.15533054,0.01553738,0.08543396
+glcm_correlation_d4,Chromatin texture,0.09023959,0.080439165,0.08533938
+lbp_P8R1_7,Local binary patterns,0.14191833,0.02347218,0.08269525
+lbp_P16R2_11,Local binary patterns,0.08700003,-0.0706455,0.07882276
+lbp_P8R1_6,Local binary patterns,0.14388917,0.012528829,0.078209
+glcm_homogeneity_d1,Chromatin texture,0.13334975,0.022574486,0.077962115
+nucleoli_count,Nucleoli and granules,-0.01722961,-0.12899454,0.07311207
+cyto_E_mean,Stain and colour,0.12761512,-0.015879475,0.0717473
+lbp_P16R2_10,Local binary patterns,-0.067683525,-0.06830875,0.06799614
+nuc_entropy,Chromatin texture,-0.012266548,0.10732051,0.05979353
+glcm_dissimilarity_d4,Chromatin texture,-0.09384419,-0.02040666,0.057125427
+lbp_P16R2_5,Local binary patterns,0.10034935,-0.009504046,0.0549267
+glcm_energy_d4,Chromatin texture,0.04561036,-0.060985025,0.05329769
+glcm_energy_d1,Chromatin texture,0.015527223,-0.08392721,0.049727216
+lbp_P8R1_5,Local binary patterns,-0.0672108,-0.03182864,0.049519718
+glcm_energy_d2,Chromatin texture,0.018072702,-0.07760238,0.04783754
+lbp_P8R1_2,Local binary patterns,0.041031353,-0.03569239,0.03836187
+nuc_a_mean,Stain and colour,0.052424636,-0.014719529,0.03357208
+nuc_a_std,Stain and colour,0.02658399,0.034892425,0.030738208
+nuc_fragments,Nuclear shape,0.03471603,-0.011183975,0.022950001
+glcm_dissimilarity_d1,Chromatin texture,0.03309664,0.011682761,0.0223897
+nuc_sat_std,Stain and colour,0.009930605,-0.026366888,0.018148746
+granule_area,Nucleoli and granules,-0.0034982567,-0.017112045,0.01030515
+glcm_dissimilarity_d2,Chromatin texture,-0.012880007,-0.0010779097,0.0069789584
+lbp_P16R2_6,Local binary patterns,-0.011563024,0.0017133259,0.006638175
+granule_count,Nucleoli and granules,0.0015480507,0.010361133,0.005954592

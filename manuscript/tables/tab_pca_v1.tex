@@ -1,0 +1,25 @@
+\begin{table*}[!t]
+\centering
+\caption{Patient-level APL detection before and after PCA of the EfficientNet-B0 embeddings (pooled-statistics LR). PCA is fitted on the training cells of each Discovery fold. Inputs: number of patient-level features (five statistics per component) for about 66 training patients per fold. Cohort ID: AUROC for telling Validation from Discovery AML cells (0.5 = no acquisition signal). Cell APL: external cell-level AUROC of a cell classifier. $\Delta$: change in external AUROC relative to the unreduced embedding (paired patient bootstrap, 4,000 resamples). Components 16, 32 and 64 were specified in advance; the others form a post hoc sensitivity analysis.}
+\label{tab:pca}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{rrrccccccccc}
+\toprule
+ & & & \multicolumn{2}{c}{Cell level} & \multicolumn{4}{c}{Patient level, AUROC} & \multicolumn{3}{c}{External, fixed operating point} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-9}\cmidrule(lr){10-12}
+Components & Var. & Inputs & Cohort ID & Cell APL & CV & External [95\% CI] & Gap & $\Delta$ [95\% CI] & Recall (missed) & Spec. & F1 \\
+\midrule
+None (1,280) & 1.00 & 6,400 & 0.583 & 0.711 & 0.957 & 0.743 [0.538, 0.926] & 0.214 & -- & 0.50 (6/12) & 0.67 & 0.55 \\
+\midrule
+4 & 0.25 & 20 & 0.593 & 0.530 & 0.874 & 0.451 [0.219, 0.700] & 0.423 & -0.292 [-0.483, -0.119]*$^{\dagger}$ & 0.50 (6/12) & 0.42 & 0.48 \\
+8 & 0.35 & 40 & 0.603 & 0.567 & 0.900 & 0.674 [0.447, 0.883] & 0.226 & -0.069 [-0.257, +0.109] & 0.50 (6/12) & 0.75 & 0.57 \\
+16 & 0.45 & 80 & 0.637 & 0.586 & 0.909 & 0.792 [0.580, 0.963] & 0.118 & +0.049 [-0.096, +0.213] & 0.92 (1/12) & 0.67 & 0.81 \\
+32 & 0.55 & 160 & 0.610 & 0.647 & 0.958 & \textbf{0.833 [0.644, 0.972]} & 0.125 & +0.090 [-0.014, +0.210] & 0.50 (6/12) & 0.92 & 0.63 \\
+64 & 0.64 & 320 & 0.579 & 0.690 & 0.966 & 0.819 [0.604, 1.000] & 0.147 & +0.076 [-0.171, +0.324] & 0.50 (6/12) & 0.92 & 0.63 \\
+128 & 0.73 & 640 & 0.571 & 0.695 & 0.968 & 0.646 [0.400, 0.867] & 0.323 & -0.097 [-0.313, +0.111] & 0.42 (7/12) & 0.92 & 0.56 \\
+256 & 0.83 & 1,280 & 0.567 & 0.719 & 0.956 & 0.743 [0.514, 0.937] & 0.213 & +0.000 [-0.195, +0.203] & 0.50 (6/12) & 0.92 & 0.63 \\
+\bottomrule
+\multicolumn{12}{l}{\footnotesize Var.: cumulative explained variance on Discovery cells. Gap: CV AUROC minus external AUROC. * $p<0.05$ unadjusted; $^{\dagger}$ $p<0.05$ after Holm correction across all comparisons in the table.}
+\end{tabular}}
+\end{table*}

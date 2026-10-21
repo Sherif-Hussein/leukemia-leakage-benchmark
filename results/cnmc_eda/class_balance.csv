@@ -1,0 +1,5 @@
+cohort,diagnosis,cells,patients,50%,min,max
+Development,HEM,2293,12,140.5,18.0,405.0
+Development,ALL,4815,30,112.5,9.0,757.0
+External,HEM,1096,14,41.0,9.0,327.0
+External,ALL,2457,17,161.0,14.0,278.0

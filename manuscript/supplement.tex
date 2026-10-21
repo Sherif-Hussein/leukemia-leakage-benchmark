@@ -1,0 +1,93 @@
+\documentclass[journal,onecolumn]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{figures/}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\begin{document}
+\title{Supplementary Material for ``Leakage-Aware, Sensitivity-First Validation of Blood-Smear Leukemia Classifiers: A Two-Dataset Study of Engineered Features, Deep Features and Dimensionality Reduction''}
+\author{First~Author and Second~Author}
+\maketitle
+\noindent This document contains the complete settings, computing environment, full parameter sweeps and secondary analyses referred to in the main text. Code, split files and per-model outputs are released with the paper.
+
+\section*{S1. Settings and computing environment}
+\input{tables/tab_hparams}
+\begin{table}[!htbp]
+\centering
+\caption{Computing environment and run times.}
+\label{tab:env}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Item & Specification \\
+\midrule
+Hardware & Intel Xeon 2.80\,GHz, 2 vCPUs, 7.8\,GB RAM, no GPU \\
+Software & Ubuntu 24.04.5 LTS; Python 3.13.16; PyTorch 2.14.1 (CPU); \\
+ & scikit-learn 1.9.1 \cite{pedregosa2011sklearn}; LightGBM 4.7.0; scikit-image 0.26.0; timm 1.0.30 \\
+Random seeds & 0, 1, 2 \\
+Engineered features & 16.1\,min for 25,724 cells (2 processes) \\
+EfficientNet-B0 embeddings & 51.2\,min for 25,724 cells (2 threads) \\
+Cell-level model, 5-fold CV & 11--40\,s (LR), 15--600\,s (LightGBM) \\
+Attention MIL, 5-fold CV & 33--61\,s per seed \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\section*{S2. Evaluation protocols and segmentation}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_splits.pdf}
+\caption{Evaluation protocols. (a) Image-level splitting places cells of the same patient in training and test sets. (b) Patient-grouped splitting with an external cohort, used in this work; the external cohort is scored once.}
+\label{fig:splits}
+\end{figure}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_segmentation.pdf}
+\caption{Segmentation behind the engineered features, shown on cells at the 25th and 75th percentile of each class list. Red: nucleus; green: basophilic region; blue tint: perinuclear ring. The upper lymphocyte and lower erythroblast illustrate failures in which the mask falls on neighboring red cells.}
+\label{fig:seg}
+\end{figure}
+
+\section*{S3. Feature engineering and full PCA sweep}
+\input{tables/tab_fe}
+\input{tables/tab_pca}
+
+\section*{S4. Training settings and learning curves}
+\input{tables/tab_epochs}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_training.pdf}
+\caption{Training dynamics on the Discovery cohort (mean $\pm$ SD over 5 folds $\times$ 3 seeds). (a)--(c) Gated attention MIL trained with AdamW at a constant learning rate of $2\times10^{-4}$: training loss (class-weighted binary cross-entropy), loss and AUROC on the held-out fold per epoch; triangles mark the epoch with the lowest held-out loss. (d) Cell-level LightGBM for T1 (learning rate 0.05): log-loss on training folds and on held-out patients per boosting round. (e), (f) Learning curves of the pooled patient model versus the number of training patients, on the held-out fold (dotted: training AUROC) and on the external cohort. Values in (e) and (f) are for single fold models, not the fold ensemble used in the tables, and are therefore slightly lower.}
+\label{fig:training}
+\end{figure}
+
+\section*{S5. Patient-level models without feature engineering}
+\input{tables/tab_patient}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_confusion.pdf}
+\caption{Confusion matrices on the external cohort at the operating point fixed on Discovery for a sensitivity of at least 0.95. Missed APL patients are shown in red.}
+\label{fig:confusion}
+\end{figure}
+
+\section*{S6. Pooled 106-patient analysis and local recalibration}
+\input{tables/tab_pooled}
+\input{tables/tab_recal}
+
+\section*{S7. Ablation of engineered feature groups}
+\input{tables/tab_ablation}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_impact.pdf}
+\caption{Effect of design choices (top) and of removing each engineered feature group for blast detection (bottom) on external AUROC. Bars are 95\% confidence intervals from a paired patient-level bootstrap.}
+\label{fig:impact}
+\end{figure}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}

@@ -1,0 +1,2 @@
+representation,dims,pooled_inputs,storage_bytes_per_cell,pca_fit_s,pca_projection_ms_per_patient,lr_train_s,lr_predict_ms_per_patient,lr_params,mil_train_s,mil_predict_ms_per_patient,mil_params,peak_rss_mb,train_patients
+"EfficientNet-B0, no PCA",1280,6400,5120,0.0,0.0,0.2582351220007695,0.08605705871185124,6401,12.371659435000765,2.955814294075347,180674,1318.29296875,65

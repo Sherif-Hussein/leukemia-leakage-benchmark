@@ -1,0 +1,22 @@
+\begin{table}[!t]
+\centering
+\caption{Pre-specified ensemble at patient/subject level: the mean of the three members' percentile scores (each relative to its own development scores). No weights or members were chosen on any data. Metrics on the external set at the operating point fixed on development data.}
+\label{tab:ensemble}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccc}
+\toprule
+Dataset & Model & External AUROC [95\% CI] & Recall (missed) & Spec. & F1 & Acc. \\
+\midrule
+APL-AML & \textbf{Ensemble (mean of percentiles)} & 0.785 [0.585, 0.944] & 1.00 (0/12) & 0.17 & 0.71 & 0.58 \\
+ & Engineered, pooled LR & 0.753 [0.541, 0.930] & 1.00 (0/12) & 0.17 & 0.71 & 0.58 \\
+ & Engineered, attention MIL & 0.809 [0.614, 0.956] & 1.00 (0/12) & 0.00 & 0.67 & 0.50 \\
+ & Fine-tuned EfficientNet-B0 & 0.781 [0.579, 0.941] & 0.83 (2/12) & 0.67 & 0.77 & 0.75 \\
+\midrule
+C-NMC & \textbf{Ensemble (mean of percentiles)} & 0.960 [0.886, 1.000] & 0.94 (1/17) & 0.79 & 0.89 & 0.87 \\
+ & Engineered, pooled LR & 0.935 [0.829, 1.000] & 0.94 (1/17) & 0.79 & 0.89 & 0.87 \\
+ & Engineered, attention MIL & 0.905 [0.781, 1.000] & 0.88 (2/17) & 0.64 & 0.81 & 0.77 \\
+ & Fine-tuned EfficientNet-B0 & 0.966 [0.899, 1.000] & 1.00 (0/17) & 0.57 & 0.85 & 0.81 \\
+\bottomrule
+\end{tabular}}
+\end{table}

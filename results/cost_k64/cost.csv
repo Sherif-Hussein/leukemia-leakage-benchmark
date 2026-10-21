@@ -1,0 +1,2 @@
+representation,dims,pooled_inputs,storage_bytes_per_cell,pca_fit_s,pca_projection_ms_per_patient,lr_train_s,lr_predict_ms_per_patient,lr_params,mil_train_s,mil_predict_ms_per_patient,mil_params,peak_rss_mb,train_patients
+PCA-64,64,320,256,6.0284000169995124,7.894511823585216,0.125521234000189,0.04613488229498377,321,6.048559626000497,0.5346570000898175,25026,1057.859375,65
