@@ -31,12 +31,12 @@ def build_encoder(name: str, weights: str | None = None) -> nn.Module:
     elif name in DINOBLOOM_ARCH:
         if not weights:
             raise SystemExit(f"{name} needs --weights pointing to the DinoBloom .pth file from Zenodo")
-        arch, dim = DINOBLOOM_ARCH[name]
-        model = torch.hub.load("facebookresearch/dinov2", arch, pretrained=False)
+        import timm
+        arch = {"dinobloom_s": "vit_small_patch14_dinov2", "dinobloom_b": "vit_base_patch14_dinov2",
+                "dinobloom_l": "vit_large_patch14_dinov2", "dinobloom_g": "vit_giant_patch14_dinov2"}[name]
+        model = timm.create_model(arch, pretrained=False, img_size=224, num_classes=0)   # CLS token, 257 positions
         ckpt = torch.load(weights, map_location="cpu")
-        sd = {k.replace("backbone.", ""): v for k, v in ckpt["teacher"].items()
-              if "dino_head" not in k and "ibot_head" not in k}
-        model.pos_embed = nn.Parameter(torch.zeros(1, 257, dim))
+        sd = {k.replace("backbone.", ""): v for k, v in ckpt["teacher"].items() if k.startswith("backbone.") and "mask_token" not in k}
         model.load_state_dict(sd, strict=True)
     else:
         raise ValueError(f"unknown encoder {name}")

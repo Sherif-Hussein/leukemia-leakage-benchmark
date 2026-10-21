@@ -54,6 +54,9 @@ ap.add_argument("--test-where", nargs="*", default=["cohort=Validation"])
 ap.add_argument("--n-boot", type=int, default=2000)
 ap.add_argument("--threads", type=int, default=2)
 ap.add_argument("--pool", default="avg", choices=["avg", "attn"], help="global average pooling or gated attention pooling over the 7x7 positions")
+ap.add_argument("--crop", action="store_true", help="cache: crop each image to the bounding box of non-black pixels (square, 8%% margin) before resizing (C-NMC)")
+ap.add_argument("--stage", type=int, default=5, choices=[4, 5], help="number of frozen blocks: 5 = train blocks 5-6 (112x14x14 cache); 4 = also train block 4 (80x14x14 cache)")
+ap.add_argument("--no-test", action="store_true", help="development CV only: the external set is not scored (used for model selection)")
 ap.add_argument("--out")
 a = ap.parse_args()
 torch.set_num_threads(a.threads)
@@ -72,11 +75,22 @@ man = pd.read_csv(a.manifest, keep_default_na=False)
 if a.cache:
     from torch.utils.data import DataLoader
     m = backbone()
-    frozen = nn.Sequential(m.conv_stem, m.bn1, *m.blocks[:5]).eval()
+    frozen = nn.Sequential(m.conv_stem, m.bn1, *m.blocks[:a.stage]).eval()
     N = len(man)
-    store = np.lib.format.open_memmap(a.cache_file, mode="w+", dtype=np.float16, shape=(N, 112, 14, 14))
+    store = np.lib.format.open_memmap(a.cache_file, mode="w+", dtype=np.float16, shape=(N, 112 if a.stage == 5 else 80, 14, 14))
     ok_all = np.zeros(N, bool)
-    dl = DataLoader(ImageList(man.path.tolist(), default_transform()), batch_size=64, num_workers=2)
+    tf = default_transform()
+    if a.crop:
+        from PIL import Image as _I
+
+        def tf(im, _base=default_transform()):
+            arr = np.asarray(im); mask = arr.max(2) > 15
+            if mask.any():
+                ys, xs = np.where(mask); cy, cx = (ys.min() + ys.max()) / 2, (xs.min() + xs.max()) / 2
+                half = max(ys.max() - ys.min(), xs.max() - xs.min()) / 2 * 1.08 + 2
+                im = im.crop((int(cx - half), int(cy - half), int(cx + half), int(cy + half)))
+            return _base(im)
+    dl = DataLoader(ImageList(man.path.tolist(), tf), batch_size=64, num_workers=2)
     i0, t0 = 0, time.time()
     with torch.no_grad():
         for x, ok in dl:
@@ -123,7 +137,7 @@ class Head(nn.Module):
     def __init__(self):
         super().__init__()
         m = backbone()
-        self.body = nn.Sequential(*m.blocks[5:], m.conv_head, m.bn2)
+        self.body = nn.Sequential(*m.blocks[a.stage:], m.conv_head, m.bn2)
         self.pool = AttnPool() if a.pool == "attn" else None
         self.drop = nn.Dropout(0.2)
         self.fc = nn.Linear(1280, 1)
@@ -207,13 +221,26 @@ for split in a.splits:
             r["split"] = split
         history += h
         oof[ho] = predict(model, rows_cv[ho])
-        ext.append(predict(model, rows_te))
+        if not a.no_test:
+            ext.append(predict(model, rows_te))
         print(f"  {split} fold {k}: held-out AUROC {MT.point_metrics(y_cv[ho][~np.isnan(oof[ho])], oof[ho][~np.isnan(oof[ho])], 0.5)['auroc']:.3f} ({time.time() - t0:.0f}s)", flush=True)
         pd.DataFrame(history).to_csv(out / "history.csv", index=False)
-    pe = np.nanmean(np.vstack(ext), 0)
-    mcv, mte = ~np.isnan(oof), ~np.isnan(pe)
+    mcv = ~np.isnan(oof)
     thr = MT.threshold_for_sensitivity(y_cv[mcv], oof[mcv], 0.95)
     cvm = MT.point_metrics(y_cv[mcv], oof[mcv], thr)
+    if a.no_test:
+        # development-only selection run: report out-of-fold CV at cell and patient level, never touch the external set
+        P = pd.DataFrame({"g": g_cv, "p": oof, "y": y_cv}).groupby("g").agg(p=("p", "mean"), y=("y", "first"))
+        fa = [MT.point_metrics(y_cv[(fold == k) & mcv], oof[(fold == k) & mcv], thr)["auroc"] for k in range(5)]
+        summary.append(dict(level="cell", split=split, cv_auroc=cvm["auroc"], cv_f1=cvm["f1"], cv_spec=cvm["spec"], fold_min=min(fa), fold_max=max(fa),
+                            patient_cv_auroc=MT.point_metrics(P.y.values, P.p.values, 0.5)["auroc"]))
+        preds += [dict(split=split, set="cv", row=i, patient_id=g, y=yy, p=pp) for i, g, yy, pp in zip(rows_cv, g_cv, y_cv, oof)]
+        print(f"== {split} (development only): CV AUROC {cvm['auroc']:.3f} (folds {min(fa):.3f}-{max(fa):.3f}) F1 {cvm['f1']:.3f} spec {cvm['spec']:.3f} | "
+              f"subject CV AUROC {summary[-1]['patient_cv_auroc']:.3f}", flush=True)
+        pd.DataFrame(summary).to_csv(out / "summary.csv", index=False); pd.DataFrame(preds).to_csv(out / "predictions.csv.gz", index=False)
+        continue
+    pe = np.nanmean(np.vstack(ext), 0)
+    mte = ~np.isnan(pe)
     r = MT.bootstrap(y_te[mte], pe[mte], g_te[mte], thr, a.n_boot)
     tm = MT.point_metrics(y_te[mte], pe[mte], thr)
     summary.append(dict(level="cell", split=split, cv_auroc=cvm["auroc"], ext_auroc=tm["auroc"], ext_lo=r["auroc_lo"], ext_hi=r["auroc_hi"],

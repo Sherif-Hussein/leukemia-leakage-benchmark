@@ -21,6 +21,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--manifest", required=True)
 ap.add_argument("--mode", choices=["patient", "cell"], default="patient")
 ap.add_argument("--dev-col", default="cohort"); ap.add_argument("--dev", default="Discovery")
+ap.add_argument("--ref-manifest", help="manifest from which the reference stain is estimated (default: --manifest)")
 ap.add_argument("--out-dir", required=True)
 ap.add_argument("--out-manifest", required=True)
 a = ap.parse_args()
@@ -60,7 +61,8 @@ def fit(o):
 
 
 rng = np.random.default_rng(0)
-ref = man[man[a.dev_col] == a.dev].path.sample(300, random_state=0)   # same reference as the pilot
+rman = pd.read_csv(a.ref_manifest, keep_default_na=False) if a.ref_manifest else man
+ref = rman[rman[a.dev_col] == a.dev].path.sample(300, random_state=0)   # same reference as the pilot (Discovery images only)
 ref_ims = [im for im in map(load, ref) if im is not None]
 REF_HE, REF_MAXC = fit(np.concatenate([od(im)[::7].astype(np.float32) for im in ref_ims]).astype(np.float64))
 REF_IO = np.median([bg(im) for im in ref_ims[:100]], axis=0)
