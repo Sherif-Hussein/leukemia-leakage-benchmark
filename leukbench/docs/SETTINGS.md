@@ -1,6 +1,6 @@
 # Settings and implementation
 
-This document describes every setting used to produce the results in the manuscript, where it lives in the code, and the exact command that produced each result folder. Nothing was tuned on the Validation cohort; it was scored once, after every setting below was frozen.
+This document describes every setting used to produce the results in the manuscript, where it lives in the code, and the exact command that produced each result folder. No model, threshold or calibration was fitted on the Validation cohort. It was, however, evaluated for many configurations during the first analysis and the revision, so it is reported as a reused test set (see PRESPECIFICATION.md, section 7).
 
 ## 1. Computing environment
 
@@ -35,7 +35,7 @@ This document describes every setting used to produce the results in the manuscr
 * **Image-level CV**: `StratifiedKFold(5, shuffle=True, random_state=seed)` over cells, ignoring patients (reproduces the leaky protocol).
 * **Patient-grouped CV**: `StratifiedGroupKFold(5, shuffle=True, random_state=seed)` with group = patient. `check_no_patient_overlap` asserts zero shared patients.
 * **Patient-level tasks**: `StratifiedKFold(5)` over the 82 Discovery patients (`patient_folds`).
-* **External test**: the Validation cohort, scored once. For T3, the external prediction is the mean of all 15 fold models (5 folds × 3 seeds).
+* **External test**: the Validation cohort (never used for fitting; evaluated for several configurations). For T3, the external prediction is the mean of all 15 fold models (5 folds × 3 seeds).
 * **Calibration**: temperature scaling on an inner 80/20 split of each training fold, bounded search T ∈ [0.05, 20] (`metrics.fit_temperature`).
 
 ## 4. Engineered features, 93 per cell (`leukbench/handcrafted.py`)
@@ -164,3 +164,13 @@ LEUKBENCH_WORK=$W python ../manuscript/make_results.py   # tables, figures, fact
 | `training_curves` | MIL per-epoch history, LightGBM per-round history, sample-size learning curve |
 | `ablation_*` | feature-group ablation and calibration |
 | `eda` | exploratory data analysis |
+
+## Revision 2 analyses
+
+| Result folder | Script | What it does |
+|---|---|---|
+| `revision_stats` | `scripts/run_revision_stats.py --work <work> --out results/revision_stats --skip-shift` | C-NMC bag-size confound; calibration (Brier, intercept, slope; raw and Platt on development OOF); reliability diagrams |
+| `revision_stats/shift` | `scripts/run_revision_stats.py --work <work> --out results/revision_stats/shift --perms 200 --perms-cnn 50` | label-free shift test with patient-level permutation p-values |
+| `date_confound` | `scripts/run_date_confound.py` | scan-time proxy (median signed-cell number), confounding of APL with scan time, time-window CV, likelihood-ratio test |
+| `preproc_clahe` | `scripts/run_preproc_test.py --variants clahe` | CLAHE arm of the preprocessing comparison |
+| `local_recalibration` | `scripts/run_local_recalibration.py` | now uses natural-scale PCA and includes the primary and secondary pipelines |

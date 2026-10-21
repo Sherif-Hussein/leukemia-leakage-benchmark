@@ -1,0 +1,23 @@
+\begin{table}[!t]
+\centering
+\caption{Does the number of cells per subject explain C-NMC results? Count AUROC: AUROC of the cell count alone for ALL vs.\ normal. For each model: AUROC of the subject score, its Spearman correlation with log(cell count), the AUROC of the score after regressing out log(count), and the likelihood-ratio $p$-value for the score added to log(count).}
+\label{tab:bagsize}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{Development (42)} & \multicolumn{2}{c}{External (31)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Quantity & Value & & Value & \\
+\midrule
+Median cells per subject, ALL / normal & 112 / 140 & & 161 / 41 & \\
+Count AUROC (Mann--Whitney $p$) & 0.453 (0.65) & & 0.735 (0.028) & \\
+\midrule
+Model: AUROC / $\rho$(score, log count) / adjusted AUROC / $p$ & & & & \\
+\quad Engineered, pooled LR & \multicolumn{2}{c}{0.917 / -0.12 / 0.917 / $<$0.001} & \multicolumn{2}{c}{0.941 / +0.08 / 0.920 / $<$0.001} \\
+\quad Engineered, attention MIL & \multicolumn{2}{c}{0.856 / -0.21 / 0.944 / $<$0.001} & \multicolumn{2}{c}{0.912 / -0.03 / 0.950 / $<$0.001} \\
+\quad Fine-tuned EfficientNet-B0 & \multicolumn{2}{c}{0.864 / -0.29 / 0.892 / $<$0.001} & \multicolumn{2}{c}{0.962 / +0.15 / 0.933 / $<$0.001} \\
+\quad Primary ensemble & \multicolumn{2}{c}{0.886 / -0.20 / 0.911 / $<$0.001} & \multicolumn{2}{c}{0.960 / +0.06 / 0.950 / $<$0.001} \\
+\bottomrule
+\end{tabular}}
+\end{table}

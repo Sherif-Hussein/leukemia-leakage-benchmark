@@ -40,3 +40,14 @@ cohort-identification AUROC 0.554 vs 0.543 (criterion a: pass); Discovery CV AUR
 patients 0.925 vs 0.942 (criterion b: **fail**, -0.017). **Decision: per-cell Macenko.**
 Cost: per-cell normalization adds about 0.14 s per cell (about 68 s per 500-cell patient) on one CPU thread;
 per-patient would add about 1 s per patient. This trade-off is reported in the paper.
+
+## 7. Erratum and disclosure (added 2026-10-21, revision 2; the sections above are unchanged)
+
+* Section 6 overstated the cost of per-cell Macenko normalization. Measured on the full run, it takes
+  **0.071 s per cell** on one CPU thread (30.5 min for 25,724 cells), i.e. about **36 s per 500-cell patient**,
+  not 0.14 s per cell / 68 s per patient. The decision itself (per-cell) rested on criterion (b), not on cost.
+* Use of the APL-AML Validation cohort: it was never used to fit a model, a threshold or a calibration, but it was
+  evaluated for many configurations in the first analysis (commit 8b2cb36 to ff3036b, 2026-10-20) and in the
+  preprocessing pilot, before this pre-specification was written. The pre-specification therefore protects the
+  final pipelines from being tuned on their own full-run results, but not from knowledge of earlier Validation
+  results. The manuscript reports the Validation cohort as a reused test set.

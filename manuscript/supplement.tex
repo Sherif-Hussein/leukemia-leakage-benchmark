@@ -6,15 +6,21 @@
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{url}
+\usepackage{float}
+\let\origtable\table\let\endorigtable\endtable
+\renewenvironment{table}[1][]{\origtable[H]}{\endorigtable}
+\renewenvironment{table*}[1][]{\begin{table}}{\end{table}}
+\let\origfigure\figure\let\endorigfigure\endfigure
+\renewenvironment{figure}[1][]{\origfigure[H]}{\endorigfigure}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{figures/}}
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \begin{document}
-\title{Supplementary Material for ``Leakage-Aware, Sensitivity-First Validation of Blood-Smear Leukemia Classifiers: A Two-Dataset Study of Engineered Features, Deep Features and Dimensionality Reduction''}
+\title{Supplementary Material for ``Leakage, Shift and the Operating Point: A Two-Dataset Evaluation of Blood-Smear Leukemia Classifiers''}
 \author{First~Author and Second~Author}
 \maketitle
-\noindent This document contains the complete settings, computing environment, full parameter sweeps and secondary analyses referred to in the main text. Code, split files and per-model outputs are released with the paper.
+\noindent This document contains the complete settings, computing environment, dataset details, full parameter sweeps, secondary analyses and the TRIPOD+AI checklist referred to in the main text. Code, split files, the pre-specification and per-model outputs are released with the paper.
 
 \section*{S1. Settings and computing environment}
 \input{tables/tab_hparams}
@@ -39,11 +45,31 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \end{tabular}}
 \end{table}
 
-\section*{S2. Evaluation protocols and segmentation}
+\section*{S2. Datasets, model overview, evaluation protocols and segmentation}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_dataset.pdf}
+\caption{APL-AML cohort composition. (a) Patients per cohort and diagnosis. (b) Labeled cell types with at least 50 cells; monocytes are almost absent in APL (1,228 vs.\ 91 cells). (c) Number of cells per patient.}
+\label{fig:dataset}
+\end{figure}
+\input{tables/tab_dataset_cnmc}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_eda_cnmc.pdf}
+\caption{Exploratory analysis of C-NMC (development: folds 0--1; external: fold 2), in the layout of the APL-AML analysis in the main text. (a) Shift of feature groups. (b) Set identifiability; values near 0.5 mean that external and development cells cannot be told apart. (c) Subjects on the first two principal components of their mean engineered features. (d) Subject-level AUROC of each feature in the two sets.}
+\label{fig:eda_cnmc}
+\end{figure}
+\input{tables/tab_shift}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_model.pdf}
+\caption{Model overview. Each cell is described by engineered features, a frozen CNN embedding (optionally reduced by PCA), their fusion, or a partially fine-tuned CNN. Cell-level classifiers serve T1, T2 and T4. For patients and subjects (T3, T5), cells are combined by pooled statistics, by gated attention MIL or by averaging fine-tuned cell probabilities, and the three are combined in the pre-specified ensemble. The decision threshold is set on development data for a recall of at least 0.95.}
+\label{fig:model}
+\end{figure}
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_splits.pdf}
-\caption{Evaluation protocols. (a) Image-level splitting places cells of the same patient in training and test sets. (b) Patient-grouped splitting with an external cohort, used in this work; the external cohort is scored once.}
+\caption{Evaluation protocols. (a) Image-level splitting places cells of the same patient in training and test sets. (b) Patient-grouped splitting with an external cohort, used in this work; the external cohort is never used for fitting, threshold selection or calibration.}
 \label{fig:splits}
 \end{figure}
 \begin{figure}[!htbp]
@@ -51,6 +77,13 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \includegraphics[width=\textwidth]{fig_segmentation.pdf}
 \caption{Segmentation behind the engineered features, shown on cells at the 25th and 75th percentile of each class list. Red: nucleus; green: basophilic region; blue tint: perinuclear ring. The upper lymphocyte and lower erythroblast illustrate failures in which the mask falls on neighboring red cells.}
 \label{fig:seg}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_leakage.pdf}
+\caption{AUROC under the three protocols at cell level (mean of three seeds). Orange: leakage (L, image-level minus patient-grouped CV) and shift (S, grouped CV minus external). (a) Cells labeled with the patient's diagnosis. (b) Cells labeled with their own type.}
+\label{fig:leakage}
 \end{figure}
 
 \section*{S3. Feature engineering and full PCA sweep}
@@ -62,7 +95,7 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_training.pdf}
-\caption{Training dynamics on the Discovery cohort (mean $\pm$ SD over 5 folds $\times$ 3 seeds). (a)--(c) Gated attention MIL trained with AdamW at a constant learning rate of $2\times10^{-4}$: training loss (class-weighted binary cross-entropy), loss and AUROC on the held-out fold per epoch; triangles mark the epoch with the lowest held-out loss. (d) Cell-level LightGBM for T1 (learning rate 0.05): log-loss on training folds and on held-out patients per boosting round. (e), (f) Learning curves of the pooled patient model versus the number of training patients, on the held-out fold (dotted: training AUROC) and on the external cohort. Values in (e) and (f) are for single fold models, not the fold ensemble used in the tables, and are therefore slightly lower.}
+\caption{Training dynamics on the Discovery cohort (mean $\pm$ SD over 5 folds $\times$ 3 seeds), computed in our first analysis with whitened PCA inputs (each component standardized); the main text uses natural-scale PCA. (a)--(c) Gated attention MIL trained with AdamW at a constant learning rate of $2\times10^{-4}$: training loss (class-weighted binary cross-entropy), loss and AUROC on the held-out fold per epoch; triangles mark the epoch with the lowest held-out loss. (d) Cell-level LightGBM for T1 (learning rate 0.05): log-loss on training folds and on held-out patients per boosting round. (e), (f) Learning curves of the pooled patient model versus the number of training patients, on the held-out fold (dotted: training AUROC) and on the external cohort. Values in (e) and (f) are for single fold models, not the fold ensemble used in the tables, and are therefore slightly lower.}
 \label{fig:training}
 \end{figure}
 
@@ -75,9 +108,17 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \label{fig:confusion}
 \end{figure}
 
-\section*{S6. Pooled 106-patient analysis and local recalibration}
+\section*{S6. Pooled 106-patient analysis, local recalibration and calibration}
 \input{tables/tab_pooled}
 \input{tables/tab_recal}
+\input{tables/tab_calibration}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_reliability.pdf}
+\caption{Reliability diagrams of patient-level probabilities on the external sets after Platt scaling fitted on development out-of-fold scores (quartile bins; 24 and 31 patients, so each point rests on 6--8 patients). Dotted: perfect calibration.}
+\label{fig:reliability}
+\end{figure}
+\input{tables/tab_bagsize}
 
 \section*{S7. Ablation of engineered feature groups}
 \input{tables/tab_ablation}
@@ -87,6 +128,9 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \caption{Effect of design choices (top) and of removing each engineered feature group for blast detection (bottom) on external AUROC. Bars are 95\% confidence intervals from a paired patient-level bootstrap.}
 \label{fig:impact}
 \end{figure}
+
+\section*{S8. TRIPOD+AI checklist}
+\input{tables/tab_tripod}
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

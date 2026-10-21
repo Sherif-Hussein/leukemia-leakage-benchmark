@@ -1,0 +1,33 @@
+digraph P {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=9, nodesep=0.12, ranksep=0.16, margin=0.02, newrank=true];
+  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=7.5, margin="0.06,0.03"];
+  edge  [color="#5B6575", arrowsize=0.5];
+  subgraph cluster_p { label="(a) Primary pipeline  (~80 s per patient)"; fontsize=8.5; style="rounded"; color="#9AA4B2";
+    in   [label="Single-cell images of one patient\n(up to 500 cells)", fillcolor="#DCE6F5"];
+    shift[label="Shift test (label-free, once per site)\nAPL-AML: yes   C-NMC: no", fillcolor="#FCEBD0"];
+    mac  [label="Macenko stain normalization, per cell\n0.071 s/cell = 36 s", fillcolor="#E4F1E4"];
+    ft   [label="Fine-tuned EfficientNet-B0\n(last 2 stages + head)\n0.051 s/cell = 26 s", fillcolor="#E4F1E4"];
+    mp   [label="Mean cell probability"];
+    seg  [label="Original images:\nsegmentation + 93 features\n0.038 s/cell = 19 s"];
+    pool [label="Pooled stats + LR"];
+    mil  [label="Attention MIL\n(40 epochs)"];
+    ens  [label="Ensemble: mean of percentile\nscores (no fitted weights)", fillcolor="#E4F1E4"];
+    thr  [label="Threshold: recall >= 0.95\non development data", fillcolor="#FCEBD0"];
+    out  [label="Prioritize for urgent review\nand confirmatory testing", fillcolor="#DCE6F5"];
+    in -> shift -> mac -> ft -> mp -> ens;
+    in -> seg; seg -> pool -> ens; seg -> mil -> ens;
+    ens -> thr -> out;
+  }
+  subgraph cluster_s { label="(b) Secondary pipeline  (~61 s per patient)"; fontsize=8.5; style="rounded"; color="#9AA4B2";
+    in2   [label="Single-cell images\n(up to 500 cells)", fillcolor="#DCE6F5"];
+    shift2[label="Shift test (label-free)", fillcolor="#FCEBD0"];
+    mac2  [label="Macenko, per cell\n36 s", fillcolor="#E4F1E4"];
+    cnn2  [label="Frozen EfficientNet-B0\n1,280-d per cell, 26 s"];
+    pca2  [label="PCA-64, natural scale\n256 B instead of 5,120 B/cell", fillcolor="#E4F1E4"];
+    pool2 [label="Pooled mean, SD,\nP10/50/90 (320 inputs)"];
+    lr2   [label="Logistic regression\n321 parameters"];
+    thr2  [label="Threshold: recall >= 0.95", fillcolor="#FCEBD0"];
+    out2  [label="Prioritize for review", fillcolor="#DCE6F5"];
+    in2 -> shift2 -> mac2 -> cnn2 -> pca2 -> pool2 -> lr2 -> thr2 -> out2;
+  }
+}

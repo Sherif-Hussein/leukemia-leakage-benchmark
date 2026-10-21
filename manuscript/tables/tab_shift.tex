@@ -1,0 +1,21 @@
+\begin{table}[!t]
+\centering
+\caption{Label-free shift test. AUROC of a classifier that assigns control-class cells (AML or normal B cells, up to 6,000) to the external or development set, patient-grouped 5-fold CV. Null: cohort labels permuted between patients. The test reads unlabelled external images and is therefore transductive; it uses no external diagnoses.}
+\label{tab:shift}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+Dataset & Representation & AUROC & Null mean (95th pct.) & $p$ & Perm. \\
+\midrule
+APL-AML & Engineered: stain and colour & 0.753 & 0.498 (0.669) & <0.005 & 200 \\
+ & Engineered (all) & 0.704 & 0.486 (0.623) & 0.010 & 200 \\
+ & EfficientNet-B0 (frozen) & 0.583 & 0.479 (0.555) & 0.039 & 50 \\
+ & EfficientNet-B0 on Macenko images & 0.603 & 0.494 (0.590) & 0.059 & 50 \\
+\midrule
+C-NMC & Engineered: stain and colour & 0.473 & 0.458 (0.682) & 0.448 & 200 \\
+ & Engineered (all) & 0.438 & 0.453 (0.712) & 0.542 & 200 \\
+ & EfficientNet-B0 (frozen) & 0.437 & 0.484 (0.647) & 0.706 & 50 \\
+\bottomrule
+\end{tabular}}
+\end{table}

@@ -31,27 +31,34 @@ R = Path(a.results); out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
 EPS = 1e-6
 
 
+def _thr(y, p):
+    return float(np.sort(p[y == 1])[int(np.floor(0.05 * (y == 1).sum()))] - 1e-9)
+
+
 def load_models():
+    """Natural-scale (unwhitened) PCA throughout; secondary = Macenko + frozen CNN + PCA-64; primary = pre-specified ensemble."""
     M = {}
-    names = {"eff_raw": "EfficientNet-B0, no PCA", "eff_pca16": "EfficientNet-B0 + PCA-16", "eff_pca32": "EfficientNet-B0 + PCA-32",
-             "eff_pca64": "EfficientNet-B0 + PCA-64 (pre-declared)", "eng_raw": "Engineered, pooled LR"}
-    fe = pd.read_csv(R / "feature_engineering" / "predictions.csv")
-    for cfg, nm in names.items():
-        f = R / "feature_engineering_oof" / f"oof_{cfg}.csv"
+    for folder, cfg, nm in [("apl_fe_nw", "eff_raw_nw", "Frozen EfficientNet-B0, no PCA"),
+                            ("apl_fe_nw", "eff_pca64_nw", "Frozen EfficientNet-B0 + PCA-64"),
+                            ("apl_fe_macenko", "eff_raw_nw", "Macenko + frozen CNN, no PCA"),
+                            ("apl_fe_macenko", "eff_pca64_nw", "Secondary: Macenko + frozen CNN + PCA-64")]:
+        f = R / folder / f"oof_{cfg}.csv"
         if f.exists():
-            o = pd.read_csv(f); t = fe[fe.config == cfg]
+            o = pd.read_csv(f); t = pd.read_csv(R / folder / "predictions.csv"); t = t[t.config == cfg]
             M[nm] = (o.y.values, o.p.values, float(o.thr_sens95.iloc[0]), t.y.values, t.p.values)
     vp = pd.read_csv(R / "v2_patient" / "predictions.csv")
-    for m, nm in [("P4", "Engineered, attention MIL")]:
+    for m, nm in [("P1", "Engineered, pooled LR"), ("P4", "Engineered, attention MIL")]:
         c = vp[(vp.model == m) & (vp["eval"] == "cv")].groupby("patient_id").agg(y=("y", "first"), p=("p", "mean"))
         t = vp[(vp.model == m) & (vp["eval"] == "test")].groupby("patient_id").agg(y=("y", "first"), p=("p", "mean"))
-        thr = np.sort(c.p.values[c.y.values == 1])[int(np.floor(0.05 * (c.y.values == 1).sum()))] - 1e-9
-        M[nm] = (c.y.values, c.p.values, float(thr), t.y.values, t.p.values)
-    ft = R / "finetune_t1"
+        M[nm] = (c.y.values, c.p.values, _thr(c.y.values, c.p.values), t.y.values, t.p.values)
+    ft = R / "finetune_t1_macenko"
     if (ft / "patient_predictions_cv.csv").exists():
         c = pd.read_csv(ft / "patient_predictions_cv.csv"); t = pd.read_csv(ft / "patient_predictions_test.csv")
-        thr = np.sort(c.p.values[c.y.values == 1])[int(np.floor(0.05 * (c.y.values == 1).sum()))] - 1e-9
-        M["Fine-tuned EfficientNet-B0"] = (c.y.values, c.p.values, float(thr), t.y.values, t.p.values)
+        M["Macenko + fine-tuned EfficientNet-B0"] = (c.y.values, c.p.values, _thr(c.y.values, c.p.values), t.y.values, t.p.values)
+    ens = R / "ensemble_apl_macenko"
+    if (ens / "ensemble_cv.csv").exists():
+        c = pd.read_csv(ens / "ensemble_cv.csv"); t = pd.read_csv(ens / "ensemble_test.csv")
+        M["Primary: pre-specified ensemble"] = (c.y.values, c.p.values, _thr(c.y.values, c.p.values), t.y.values, t.p.values)
     return M
 
 

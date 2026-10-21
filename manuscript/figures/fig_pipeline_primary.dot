@@ -5,7 +5,7 @@ digraph P {
   in   [label="Input\npatient's blood smear\nsingle-cell images\n(up to 500 cells)", fillcolor="#DCE6F5"];
   qc   [label="Quality control\nunreadable files\n-> missing, imputed"];
   shift[label="Shift test (label-free)\ncan cells be assigned\nto their cohort?", fillcolor="#FCEBD0", shape=diamond, style="filled"];
-  mac  [label="Macenko stain\nnormalization\n(per cell)\n~0.14 s / cell", fillcolor="#E4F1E4"];
+  mac  [label="Macenko stain\nnormalization\n(per cell)\n0.071 s / cell", fillcolor="#E4F1E4"];
   subgraph cluster_a { label="Engineered branch (original images)"; fontsize=8; style=dashed; color="#9AA4B2";
     seg  [label="Nucleus segmentation\n+ cytoplasm proxies"];
     eng  [label="93 morphology\nfeatures per cell"];
@@ -19,7 +19,7 @@ digraph P {
   }
   ens  [label="Ensemble\nmean of percentile scores\n(pre-specified)", fillcolor="#E4F1E4"];
   thr  [label="Threshold set on development\ndata for recall >= 0.95", fillcolor="#FCEBD0"];
-  out  [label="Output\nAPL suspected / not\n+ score, attention map", fillcolor="#DCE6F5"];
+  out  [label="Output\nAPL suspected / not\n+ score", fillcolor="#DCE6F5"];
   in -> qc -> shift;
   shift -> mac [label=" yes", fontsize=7.5];
   shift -> ft [label=" no", fontsize=7.5, style=dashed];
