@@ -1,6 +1,6 @@
 \begin{table*}[!t]
 \centering
-\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; $\pm$ SD across seeds). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}
+\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for shift). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}
 \label{tab:leakage}
 \setlength{\tabcolsep}{3pt}
 \resizebox{\textwidth}{!}{%
@@ -10,19 +10,19 @@
 \cmidrule(lr){3-6}\cmidrule(lr){7-8}\cmidrule(lr){9-11}
 Task & Model & Image CV & Grouped CV & External [95\% CI] & Leaky-trained ext. & Leakage & Shift & Recall & Spec. & F1 \\
 \midrule
-T1 APL-AML: diagnosis on cells (patient label) & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.723 & +0.091 $\pm$ 0.011 & +0.227 $\pm$ 0.041 & 0.69 & 0.55 & 0.54 \\
- & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.677 & +0.042 $\pm$ 0.006 & +0.237 $\pm$ 0.017 & 0.73 & 0.46 & 0.52 \\
- & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & 0.717 & +0.108 $\pm$ 0.009 & +0.173 $\pm$ 0.039 & 0.81 & 0.43 & 0.56 \\
- & Fusion + LR & 0.985 & 0.901 & \textbf{0.734 [0.595, 0.848]} & 0.760 & +0.083 $\pm$ 0.009 & +0.167 $\pm$ 0.031 & 0.78 & 0.54 & 0.59 \\
+T1 APL-AML: diagnosis on cells (patient label) & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.723 & +0.091 [+0.045, +0.169] & +0.227 [+0.065, +0.432] & 0.69 & 0.55 & 0.54 \\
+ & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.677 & +0.042 [+0.019, +0.077] & +0.237 [+0.073, +0.421] & 0.73 & 0.46 & 0.52 \\
+ & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & 0.717 & +0.108 [+0.072, +0.160] & +0.173 [+0.045, +0.323] & 0.81 & 0.43 & 0.56 \\
+ & Fusion + LR & 0.985 & 0.901 & \textbf{0.734 [0.595, 0.848]} & 0.760 & +0.083 [+0.050, +0.133] & +0.167 [+0.049, +0.311] & 0.78 & 0.54 & 0.59 \\
 \midrule
-T2 APL-AML: blast detection (cell label) & Engineered + LightGBM & 0.978 & 0.954 & \textbf{0.957 [0.931, 0.977]} & 0.956 & +0.024 $\pm$ 0.003 & -0.003 $\pm$ 0.003 & 0.99 & 0.62 & 0.58 \\
- & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & 0.951 & +0.014 $\pm$ 0.003 & -0.000 $\pm$ 0.003 & 0.98 & 0.70 & 0.63 \\
- & EfficientNet-B0 + LR & 0.956 & 0.927 & 0.920 [0.874, 0.956] & 0.920 & +0.029 $\pm$ 0.002 & +0.007 $\pm$ 0.006 & 0.96 & 0.64 & 0.58 \\
- & Fusion + LR & 0.964 & 0.940 & 0.932 [0.894, 0.961] & 0.932 & +0.024 $\pm$ 0.003 & +0.009 $\pm$ 0.007 & 0.96 & 0.68 & 0.61 \\
+T2 APL-AML: blast detection (cell label) & Engineered + LightGBM & 0.978 & 0.954 & \textbf{0.957 [0.931, 0.977]} & 0.956 & +0.024 [+0.011, +0.040] & -0.003 [-0.032, +0.027] & 0.99 & 0.62 & 0.58 \\
+ & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & 0.951 & +0.014 [+0.008, +0.021] & -0.000 [-0.031, +0.031] & 0.98 & 0.70 & 0.63 \\
+ & EfficientNet-B0 + LR & 0.956 & 0.927 & 0.920 [0.874, 0.956] & 0.920 & +0.029 [+0.019, +0.041] & +0.007 [-0.034, +0.050] & 0.96 & 0.64 & 0.58 \\
+ & Fusion + LR & 0.964 & 0.940 & 0.932 [0.894, 0.961] & 0.932 & +0.024 [+0.015, +0.037] & +0.009 [-0.025, +0.046] & 0.96 & 0.68 & 0.61 \\
 \midrule
-T4 C-NMC: cells (subject label) & Engineered + LR & 0.933 & 0.864 & \textbf{0.840 [0.730, 0.902]} & 0.848 & +0.069 $\pm$ 0.008 & +0.023 $\pm$ 0.025 & 0.95 & 0.58 & 0.89 \\
- & EfficientNet-B0 + LR & 0.912 & 0.834 & 0.775 [0.640, 0.859] & 0.786 & +0.079 $\pm$ 0.014 & +0.059 $\pm$ 0.023 & 0.96 & 0.43 & 0.87 \\
- & Fusion + LR & 0.939 & 0.864 & 0.817 [0.692, 0.892] & 0.825 & +0.075 $\pm$ 0.009 & +0.047 $\pm$ 0.026 & 0.95 & 0.54 & 0.88 \\
+T4 C-NMC: cells (subject label) & Engineered + LR & 0.933 & 0.864 & \textbf{0.840 [0.730, 0.902]} & 0.848 & +0.069 [+0.023, +0.143] & +0.023 [-0.089, +0.153] & 0.95 & 0.58 & 0.89 \\
+ & EfficientNet-B0 + LR & 0.912 & 0.834 & 0.775 [0.640, 0.859] & 0.786 & +0.079 [+0.036, +0.149] & +0.059 [-0.053, +0.195] & 0.96 & 0.43 & 0.87 \\
+ & Fusion + LR & 0.939 & 0.864 & 0.817 [0.692, 0.892] & 0.825 & +0.075 [+0.027, +0.149] & +0.047 [-0.070, +0.189] & 0.95 & 0.54 & 0.88 \\
 \bottomrule
 \end{tabular}}
 \end{table*}

@@ -1,0 +1,32 @@
+{
+  "manifest": "manifests/apl_aml.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "task": "apl_patient",
+  "features": [
+    "hand=features/apl_aml_hand_macenko.parquet"
+  ],
+  "models": [
+    "P1=hand:pool_lr",
+    "P4=hand:abmil"
+  ],
+  "folds": 5,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "cv_where": [
+    "cohort=Discovery"
+  ],
+  "test_where": [
+    "cohort=Validation"
+  ],
+  "max_cells": 500,
+  "epochs": 40,
+  "max_epochs": 40,
+  "threshold": "sens95",
+  "ext_sens": 0.95,
+  "n_boot": 2000,
+  "threads": 1,
+  "out": "results/v2_patient_macenko_eng"
+}

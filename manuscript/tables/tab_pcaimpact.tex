@@ -1,6 +1,6 @@
 \begin{table}[!t]
 \centering
-\caption{Impact of PCA on patient/subject-level detection (external sets). Before: unreduced 1,280-dimensional embedding. After: PCA fitted on development cells, scores kept at their natural scale. Rule: number of components with the highest development CV AUROC (pre-declared). Threshold metrics at the operating point fixed on development data.}
+\caption{Impact of PCA on patient/subject-level detection (external sets). Before: unreduced 1,280-dimensional embedding. After: PCA fitted on development cells, scores kept at their natural scale. Rule: number of components with the highest development CV AUROC within the pre-specified set $\{16,32,64\}$; over the full sweep (4--256 and no PCA), development CV favoured 256 components on APL-AML and no reduction on C-NMC. Threshold metrics at the operating point fixed on development data.}
 \label{tab:pcaimpact}
 \setlength{\tabcolsep}{2.4pt}
 \resizebox{\columnwidth}{!}{%
@@ -10,13 +10,12 @@ Dataset & Representation & AUROC & $\Delta$AUROC & Acc. & Recall (missed) & Spec
 \midrule
 APL-AML & Before: no PCA & 0.708 & -- & 0.67 & 0.67 (4/12) & 0.67 & 0.67 & 0.67 \\
  & After: PCA-32 & 0.785 & +0.076 & 0.62 & 0.50 (6/12) & 0.75 & 0.57 & 0.60 \\
- & After: PCA-64 & 0.792 & +0.083 & 0.62 & 0.50 (6/12) & 0.75 & 0.57 & 0.60 \\
- & After: PCA-256 (rule) & 0.778 & +0.069 & 0.62 & 0.50 (6/12) & 0.75 & 0.57 & 0.60 \\
+ & After: PCA-64 (rule) & 0.792 & +0.083 & 0.62 & 0.50 (6/12) & 0.75 & 0.57 & 0.60 \\
+ & PCA-256 (best dev.\ CV, full sweep) & 0.778 & +0.069 & 0.62 & 0.50 (6/12) & 0.75 & 0.57 & 0.60 \\
 \midrule
 C-NMC & Before: no PCA & 0.908 & -- & 0.84 & 1.00 (0/17) & 0.64 & 0.87 & 1.00 \\
  & After: PCA-32 & 0.840 & -0.067 & 0.71 & 0.94 (1/17) & 0.43 & 0.78 & 0.86 \\
- & After: PCA-64 & 0.853 & -0.055 & 0.74 & 0.94 (1/17) & 0.50 & 0.80 & 0.88 \\
- & No PCA (rule) & 0.908 & -- & 0.84 & 1.00 (0/17) & 0.64 & 0.87 & 1.00 \\
+ & After: PCA-64 (rule) & 0.853 & -0.055 & 0.74 & 0.94 (1/17) & 0.50 & 0.80 & 0.88 \\
 \bottomrule
 \end{tabular}}
 \end{table}

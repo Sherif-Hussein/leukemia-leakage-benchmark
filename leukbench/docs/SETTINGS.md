@@ -174,3 +174,6 @@ LEUKBENCH_WORK=$W python ../manuscript/make_results.py   # tables, figures, fact
 | `date_confound` | `scripts/run_date_confound.py` | scan-time proxy (median signed-cell number), confounding of APL with scan time, time-window CV, likelihood-ratio test |
 | `preproc_clahe` | `scripts/run_preproc_test.py --variants clahe` | CLAHE arm of the preprocessing comparison |
 | `local_recalibration` | `scripts/run_local_recalibration.py` | now uses natural-scale PCA and includes the primary and secondary pipelines |
+| `gap_bootstrap` | `scripts/run_gap_bootstrap.py --boot 500` | patient-level bootstrap CIs of the leakage and shift components |
+| `v2_patient_macenko_eng`, `ensemble_apl_all_macenko` | `run_patient_benchmark.py` on Macenko engineered features; `run_ensemble.py` | sensitivity: primary pipeline with engineered features on normalized images |
+| `ensemble_apl` | `run_ensemble.py --patient results/v2_patient --finetune results/finetune_t1` | sensitivity: primary pipeline without Macenko normalization |

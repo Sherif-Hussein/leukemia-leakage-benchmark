@@ -35,6 +35,18 @@ def holm(pvals):
     return adj
 
 
+def cpr(rate, n, d=2):
+    """rate with exact (Clopper-Pearson) 95% CI from a proportion of n."""
+    from scipy.stats import beta
+    k = int(round(rate * n)); lo = 0.0 if k == 0 else beta.ppf(0.025, k, n - k + 1); hi = 1.0 if k == n else beta.ppf(0.975, k + 1, n - k)
+    return f"{rate:.{d}f} ({lo:.{d}f}--{hi:.{d}f})"
+
+
+def npv_s(npv, fn, spec, d=2):
+    """NPV is undefined when nothing is called negative."""
+    return "n/a" if (spec == 0 and fn == 0) else f"{npv:.{d}f}"
+
+
 def ci(v, lo, hi, d=3):
     return f"{v:.{d}f} [{lo:.{d}f}, {hi:.{d}f}]"
 
@@ -62,6 +74,9 @@ leak.to_csv(TAB / "leakage.csv", index=False)
 facts["leak"] = leak.round(4).to_dict("records")
 
 # ---- leakage vs shift decomposition, per seed, all cell-level tasks (both datasets)
+GB = pd.read_csv(R / "gap_bootstrap" / "gap_bootstrap.csv") if (R / "gap_bootstrap" / "gap_bootstrap.csv").exists() else None
+
+
 def decomp(summary_csv, task_label, models):
     s_ = pd.read_csv(summary_csv); out_ = []
     for m in models:
@@ -80,6 +95,9 @@ def decomp(summary_csv, task_label, models):
         out_.append(dict(task=task_label, model=NAMES.get(m, m), image_cv=P.ic.mean(), grouped_cv=P.gc.mean(), ext=P.ex.mean(), lo=P.lo.mean(), hi=P.hi.mean(),
                          leaky_trained_ext=P.lx.mean(), leakage=(P.ic - P.gc).mean(), leakage_sd=(P.ic - P.gc).std(), shift=(P.gc - P.ex).mean(),
                          shift_sd=(P.gc - P.ex).std(), total=(P.ic - P.ex).mean(), sens=P.sens.mean(), spec=P.spec.mean(), f1=P.f1.mean(), seeds=len(P)))
+        g_ = GB[(GB.task.str[:2] == task_label[:2]) & (GB.model == m)] if GB is not None else pd.DataFrame()
+        out_[-1].update(dict(leak_lo=g_.leak_lo.iloc[0], leak_hi=g_.leak_hi.iloc[0], shift_lo=g_.shift_lo.iloc[0], shift_hi=g_.shift_hi.iloc[0]) if len(g_) else
+                        dict(leak_lo=np.nan, leak_hi=np.nan, shift_lo=np.nan, shift_hi=np.nan))
     return out_
 
 
@@ -90,7 +108,7 @@ if (R / "cnmc_cell" / "summary.csv").exists():
     DEC += decomp(R / "cnmc_cell" / "summary.csv", "T4 C-NMC: cells (subject label)", ["M1lr", "M2", "M4"])
 DEC = pd.DataFrame(DEC); DEC.to_csv(TAB / "leakage_decomposition.csv", index=False); facts["leakage_decomposition"] = DEC.round(4).to_dict("records")
 L = [r"\begin{table*}[!t]", r"\centering",
-     r"\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; $\pm$ SD across seeds). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}",
+     r"\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for shift). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}",
      r"\label{tab:leakage}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llcccccccccc}", r"\toprule",
      r" & & \multicolumn{4}{c}{AUROC} & \multicolumn{2}{c}{Decomposition of the gap} & \multicolumn{3}{c}{External, fixed operating point} \\",
      r"\cmidrule(lr){3-6}\cmidrule(lr){7-8}\cmidrule(lr){9-11}",
@@ -100,7 +118,7 @@ for t, grp in DEC.groupby("task", sort=False):
     for j, r in enumerate(grp.itertuples()):
         e = ci(r.ext, r.lo, r.hi); e = r"\textbf{" + e + "}" if r.ext == best else e
         L.append(f"{t if j == 0 else ''} & {r.model} & {r.image_cv:.3f} & {r.grouped_cv:.3f} & {e} & {r.leaky_trained_ext:.3f} & "
-                 f"{r.leakage:+.3f} $\\pm$ {r.leakage_sd:.3f} & {r.shift:+.3f} $\\pm$ {r.shift_sd:.3f} & {r.sens:.2f} & {r.spec:.2f} & {r.f1:.2f} \\\\")
+                 f"{r.leakage:+.3f} [{r.leak_lo:+.3f}, {r.leak_hi:+.3f}] & {r.shift:+.3f} [{r.shift_lo:+.3f}, {r.shift_hi:+.3f}] & {r.sens:.2f} & {r.spec:.2f} & {r.f1:.2f} \\\\")
     L.append(r"\midrule")
 L[-1] = r"\bottomrule"
 L += [r"\end{tabular}}", r"\end{table*}"]
@@ -151,7 +169,7 @@ best = pt.ext.max()
 for r in pt.itertuples():
     e = ci(r.ext, r.lo, r.hi)
     e = r"\textbf{" + e + "}" if r.ext == best else e
-    L.append(f"{r.rep} & {r.agg} & {r.cv:.3f}$\\pm${r.cv_sd:.3f} & {e} & {r.sens:.2f} ({r.fn}/12) & {r.spec:.2f} & {r.f1:.2f} & {r.npv:.2f} & {r.ece:.3f} & {r.y_sens:.2f} ({r.y_fn}/12) & {r.y_spec:.2f} & {r.y_acc:.2f} \\\\")
+    L.append(f"{r.rep} & {r.agg} & {r.cv:.3f}$\\pm${r.cv_sd:.3f} & {e} & {r.sens:.2f} ({r.fn}/12) & {r.spec:.2f} & {r.f1:.2f} & {npv_s(r.npv, r.fn, r.spec)} & {r.ece:.3f} & {r.y_sens:.2f} ({r.y_fn}/12) & {r.y_spec:.2f} & {r.y_acc:.2f} \\\\")
 L += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
 (TAB / "tab_patient.tex").write_text("\n".join(L))
 
@@ -160,11 +178,11 @@ bl = pd.read_csv(R / "v2_baselines" / "baselines.csv")
 facts["baselines"] = bl.round(4).to_dict("records")
 best_m = pt.sort_values("ext", ascending=False).iloc[0]
 C = [r"\begin{table*}[!t]", r"\centering",
-     r"\caption{Comparison with existing methods on the same APL-AML cohort. Upper block: results as reported by the original studies, whose protocols differ from ours. Lower blocks: methods re-run on the identical split (trained on Discovery, tested once on the 24 Validation patients) with the same operating-point rule (sensitivity $\geq$ 0.95 on Discovery). The primary pipeline is compared with each of its members.}",
+     r"\caption{Comparison with existing methods on the same APL-AML cohort. Upper block: results as reported by the original studies, whose protocols differ from ours. Lower blocks: methods re-run on the identical split (trained on Discovery, tested once on the 24 Validation patients) with the same operating-point rule (sensitivity $\geq$ 0.95 on Discovery). The primary pipeline is compared with each of its members. Recall and specificity with exact (Clopper--Pearson) 95\% CIs over 12 patients each; NPV n/a: no patient called negative.}",
      r"\label{tab:compare}", r"\setlength{\tabcolsep}{3.5pt}", r"\begin{tabular}{p{4.6cm}p{3.6cm}ccccccc}", r"\toprule",
-     r"Method & Evaluation & AUROC [95\% CI] & Recall (missed) & Spec. & F1 & NPV & Acc. \\", r"\midrule",
+     r"Method & Evaluation & AUROC [95\% CI] & Recall (95\% CI) [missed] & Spec. (95\% CI) & F1 & NPV & Acc. \\", r"\midrule",
      r"\multicolumn{8}{l}{\emph{As reported in the literature}} \\",
-     r"Single-cell CNN, Sidhom \emph{et al.} \cite{sidhom2021apl} & Temporal validation, cell level & 0.743 & -- & -- & -- & -- & -- \\",
+     r"Single-cell CNN, Sidhom \emph{et al.} \cite{sidhom2021apl} & Temporal validation, single-cell classifier & 0.743 & -- & -- & -- & -- & -- \\",
      r"Annotation-free MIL, Manescu \emph{et al.} \cite{manescu2023apl} & Random 3-fold CV, patient level & 0.96 $\pm$ 0.02 & -- & -- & -- & -- & -- \\",
      r"Ten clinicians (reader study in \cite{sidhom2021apl}) & Same 24 Validation patients, smear images & \multicolumn{6}{l}{shown only graphically; the authors' MIL model was equivalent or better} \\",
      r"\midrule", r"\multicolumn{8}{l}{\emph{Re-run on the identical split (Validation cohort, patient level)}} \\"]
@@ -175,7 +193,7 @@ labels = {"Promyelocyte proportion": r"Promyelocyte proportion (biomarker in \ci
           "Fusion + LR, cell mean": r"Single-cell classifier, fusion (design of \cite{sidhom2021apl})"}
 for r in bl.itertuples():
     lab = labels.get(r.baseline, r.baseline.replace("Differential count (17 cell types) + LR", r"Differential count + LR (comparator in \cite{dasdelen2026caitomorph})"))
-    C.append(f"{lab} & Same protocol & {ci(r.auroc, r.auroc_lo, r.auroc_hi)} & {r.sens:.2f} ({int(r.fn)}/12) & {r.spec:.2f} & {r.f1:.2f} & {r.npv:.2f} & {r.acc:.2f} \\\\")
+    C.append(f"{lab} & Same protocol & {ci(r.auroc, r.auroc_lo, r.auroc_hi)} & {cpr(r.sens, 12)} [{int(r.fn)}] & {cpr(r.spec, 12)} & {r.f1:.2f} & {npv_s(r.npv, r.fn, r.spec)} & {r.acc:.2f} \\\\")
 C.append(r"\midrule")
 C.append(r"\multicolumn{8}{l}{\emph{This work (pre-specified pipelines and their members)}} \\")
 _ens = pd.read_csv(R / "ensemble_apl_macenko" / "ensemble.csv").set_index("model").loc["Ensemble"]
@@ -187,7 +205,7 @@ for m, lab in [("P1", "Member: engineered, pooled LR"), ("P4", "Member: engineer
 cmp_rows.append(("Member: Macenko + fine-tuned CNN", _ft.ext_auroc, _ft.ext_lo, _ft.ext_hi, _ft.ext_sens, _ft.ext_fn, _ft.ext_spec, _ft.ext_f1, _ft.ext_npv, _ft.ext_acc))
 cmp_rows.append(("Secondary pipeline (Macenko + frozen CNN + PCA-64)", _sec.ext_auroc, _sec.ext_lo, _sec.ext_hi, _sec.sens95_sens, _sec.sens95_fn, _sec.sens95_spec, _sec.sens95_f1, _sec.sens95_npv, _sec.sens95_acc))
 for lab, au, lo, hi, se, fn, sp, f1, npv, acc in cmp_rows:
-    C.append(f"{lab} & Same protocol & {ci(au, lo, hi)} & {se:.2f} ({int(fn)}/12) & {sp:.2f} & {f1:.2f} & {npv:.2f} & {acc:.2f} \\\\")
+    C.append(f"{lab} & Same protocol & {ci(au, lo, hi)} & {cpr(se, 12)} [{int(fn)}] & {cpr(sp, 12)} & {f1:.2f} & {npv_s(npv, fn, sp)} & {acc:.2f} \\\\")
 C += [r"\bottomrule", r"\end{tabular}", r"\end{table*}"]
 (TAB / "tab_compare.tex").write_text("\n".join(C))
 
@@ -339,7 +357,7 @@ facts["feature_engineering"] = fe.round(4).to_dict("records")
 sel = fe.loc[fe.cv_auroc.idxmax()]
 facts["fe_selected"] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) else v) for k, v in sel.to_dict().items()}
 L = [r"\begin{table*}[!t]", r"\centering",
-     r"\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort is scored once. $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}",
+     r"\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort was not used for fitting. PCA rows in this table use the whitened scaling of our first analysis (each component standardized), and the pooled LR of these experiments standardizes each feature, so its unreduced references differ from Table~\ref{tab:patient} and from the natural-scale analysis of the main text (engineered 0.729 vs.\ 0.757; EfficientNet-B0 0.743 vs.\ 0.722 and 0.708). $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}",
      r"\label{tab:fe}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
      r"Representation & Engineering step & CV AUROC & External AUROC [95\% CI] & $\Delta$ [95\% CI] & Recall (missed) & Spec. & F1 & Oracle spec. \\", r"\midrule"]
 for i, r in enumerate(fe.itertuples()):
@@ -395,7 +413,7 @@ if (R / "pca_analysis" / "pca_analysis.csv").exists() and "feature_engineering_p
         if k == 1280:
             L.append(r"\midrule")
     L += [r"\bottomrule", r"\multicolumn{12}{l}{\footnotesize Var.: cumulative explained variance on Discovery cells. Gap: CV AUROC minus external AUROC. * $p<0.05$ unadjusted; $^{\dagger}$ $p<0.05$ after Holm correction across all comparisons in the table.}", r"\end{tabular}}", r"\end{table*}"]
-    (TAB / "tab_pca_v1.tex").write_text("\n".join(L))
+    pass  # first-analysis PCA table superseded by tab_pca
 
     fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.3))
     s = pk[pk.k != 1280]; raw = pk[pk.k == 1280].iloc[0]
@@ -518,9 +536,9 @@ if (R / "cnmc_cell" / "summary.csv").exists():
     for r in cn.itertuples():
         L.append(f"{r.model} & & {r.image_cv:.3f} & {r.grouped_cv:.3f} & {ci(r.ext, r.lo, r.hi)} & {r.sens:.2f} & {r.spec:.2f} & {r.f1:.2f} & {r.leak:+.3f} & {r.shift:+.3f} \\\\")
     L += [r"\midrule", r"\multicolumn{10}{l}{\emph{(b) Subject level: is this subject's sample leukemic?}} \\",
-          r"Representation & Aggregation & CV AUROC & & External [95\% CI] & Recall (missed) & Spec. & F1 & NPV & \\", r"\midrule"]
+          r"Representation & Aggregation & CV AUROC & & External [95\% CI] & Recall (95\% CI) [missed] & Spec. (95\% CI) & F1 & NPV & \\", r"\midrule"]
     for r in cp.itertuples():
-        L.append(f"{r.rep} & {r.agg} & {r.cv:.3f} & & {ci(r.ext, r.lo, r.hi)} & {r.sens:.2f} ({int(r.fn)}/{npos}) & {r.spec:.2f} & {r.f1:.2f} & {r.npv:.2f} & \\\\")
+        L.append(f"{r.rep} & {r.agg} & {r.cv:.3f} & & {ci(r.ext, r.lo, r.hi)} & {cpr(r.sens, npos)} [{int(r.fn)}] & {cpr(r.spec, 31 - npos)} & {r.f1:.2f} & {npv_s(r.npv, r.fn, r.spec)} & \\\\")
     L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
     (TAB / "tab_cnmc.tex").write_text("\n".join(L))
     print(cn.round(3).to_string()); print(cp.round(3).to_string())
@@ -582,18 +600,18 @@ if (R / "cnmc_fe" / "feature_engineering.csv").exists():
     (TAB / "tab_pca.tex").write_text("\n".join(L))
     # compact before/after impact table (non-whitened PCA): no PCA, pre-specified 32 and 64, and the rule-selected k
     L = [r"\begin{table}[!t]", r"\centering",
-         r"\caption{Impact of PCA on patient/subject-level detection (external sets). Before: unreduced 1,280-dimensional embedding. After: PCA fitted on development cells, scores kept at their natural scale. Rule: number of components with the highest development CV AUROC (pre-declared). Threshold metrics at the operating point fixed on development data.}",
+         r"\caption{Impact of PCA on patient/subject-level detection (external sets). Before: unreduced 1,280-dimensional embedding. After: PCA fitted on development cells, scores kept at their natural scale. Rule: number of components with the highest development CV AUROC within the pre-specified set $\{16,32,64\}$; over the full sweep (4--256 and no PCA), development CV favoured 256 components on APL-AML and no reduction on C-NMC. Threshold metrics at the operating point fixed on development data.}",
          r"\label{tab:pcaimpact}", r"\setlength{\tabcolsep}{2.4pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
          r"Dataset & Representation & AUROC & $\Delta$AUROC & Acc. & Recall (missed) & Spec. & F1 & NPV \\", r"\midrule"]
     imp = []
     for nm in ["APL-AML", "C-NMC"]:
         d = sw[(nm, "nw")].set_index("k")
-        rule_k = int(d.cv_auroc.idxmax())
+        rule_k = int(d.loc[[16, 32, 64]].cv_auroc.idxmax())   # pre-specified set
+        sweep_k = int(d.cv_auroc.idxmax())                       # sensitivity analysis: whole sweep
         picks = [(1280, "Before: no PCA"), (32, "After: PCA-32"), (64, "After: PCA-64")]
-        if rule_k not in (32, 64):
-            picks.append((rule_k, f"After: PCA-{rule_k} (rule)" if rule_k != 1280 else "No PCA (rule)"))
-        else:
-            picks = [(k, lab + (" (rule)" if k == rule_k else "")) for k, lab in picks]
+        picks = [(k, lab + (" (rule)" if k == rule_k else "")) for k, lab in picks]
+        if sweep_k not in (32, 64, 1280):
+            picks.append((sweep_k, rf"PCA-{sweep_k} (best dev.\ CV, full sweep)"))
         for i, (k, lab) in enumerate(picks):
             r = d.loc[k]
             dlt = "--" if k == 1280 else f"{r.ext_auroc - d.loc[1280].ext_auroc:+.3f}"
@@ -852,13 +870,19 @@ def ladder_rows():
         e = pd.read_csv(R / ("ensemble_apl_macenko" if ds == "APL-AML" else "ensemble_cnmc") / "ensemble.csv").set_index("model").loc["Ensemble"]
         add(ds, "patient", "Primary: ensemble of the three members above" if ds == "C-NMC" else "Primary: ensemble (Macenko fine-tuned + engineered)",
             e.ext_auroc, e.lo, e.hi, e.acc, e.sens, e.fn, e.spec, e.f1, npos)
+        if ds == "APL-AML":
+            for d, lab in [("ensemble_apl", "Sensitivity: primary without Macenko"), ("ensemble_apl_all_macenko", "Sensitivity: primary, engineered also on Macenko images")]:
+                f = R / d / "ensemble.csv"
+                if f.exists():
+                    e = pd.read_csv(f).set_index("model").loc["Ensemble"]
+                    add(ds, "patient", lab, e.ext_auroc, e.lo, e.hi, e.acc, e.sens, e.fn, e.spec, e.f1, npos)
     return pd.DataFrame(rows)
 
 
 LD = ladder_rows()
 LD.to_csv(TAB / "impact_ladder.csv", index=False); facts["impact_ladder"] = LD.round(4).to_dict("records")
 L = [r"\begin{table*}[!t]", r"\centering",
-     r"\caption{What each addition changes on new patients (external sets; cells: T1/T4, patients: T3/T5). Each block starts from a frozen ImageNet CNN; $\Delta$: AUROC change relative to the first row of the block. Threshold metrics at the operating point fixed on development data (target recall 0.95). Cell rows: mean of three seeds (frozen) or one seed (fine-tuned). The ensemble averages percentile scores of the fine-tuned CNN (with Macenko on APL-AML), engineered pooled LR and engineered attention MIL.}",
+     r"\caption{What each addition changes on new patients (external sets; cells: T1/T4, patients: T3/T5). Each block starts from a frozen ImageNet CNN; $\Delta$: AUROC change relative to the first row of the block. Threshold metrics at the operating point fixed on development data (target recall 0.95); patient rows give exact 95\% CIs for recall and specificity. Cell rows: mean of three seeds (frozen) or one seed (fine-tuned). The ensemble averages percentile scores of the fine-tuned CNN (with Macenko on APL-AML), engineered pooled LR and engineered attention MIL.}",
      r"\label{tab:ladder}", r"\setlength{\tabcolsep}{3.5pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lllcccccccc}", r"\toprule",
      r"Dataset & Level & Model & AUROC [95\% CI] & $\Delta$AUROC & Accuracy & Recall & Missed & Specificity & F1 \\", r"\midrule"]
 for (ds, lv), grp in LD.groupby(["dataset", "level"], sort=False):
@@ -867,7 +891,7 @@ for (ds, lv), grp in LD.groupby(["dataset", "level"], sort=False):
         miss = "--" if np.isnan(r.fn) else f"{int(r.fn)}/{int(r.npos)}"
         st = r"\textbf{" + r.step + "}" if r.step.startswith(("Primary", "Frozen CNN + Macenko + PCA")) else r.step
         L.append(f"{ds if i == 0 else ''} & {('Cell' if lv == 'cell' else 'Patient') if i == 0 else ''} & {st} & {ci(r.auroc, r.lo, r.hi)} & "
-                 + ("--" if i == 0 else f"{r.auroc - base:+.3f}") + f" & {r.acc:.2f} & {r.sens:.2f} & {miss} & {r.spec:.2f} & {r.f1:.2f} \\\\")
+                 + ("--" if i == 0 else f"{r.auroc - base:+.3f}") + f" & {r.acc:.2f} & " + (f"{r.sens:.2f}" if np.isnan(r.npos) else cpr(r.sens, int(r.npos))) + f" & {miss} & " + (f"{r.spec:.2f}" if np.isnan(r.npos) else cpr(r.spec, 12 if ds == "APL-AML" else 14)) + f" & {r.f1:.2f} \\\\")
     L.append(r"\midrule")
 L[-1] = r"\bottomrule"
 L += [r"\end{tabular}}", r"\end{table*}"]
@@ -1011,7 +1035,7 @@ if fm.exists() and cost:
          r" & \multicolumn{7}{c}{Performance (external, fixed threshold)} & \multicolumn{4}{c}{Complexity} \\", r"\cmidrule(lr){2-8}\cmidrule(lr){9-12}",
          r"Pipeline & AUROC & Acc. & Recall & Missed & Spec. & F1 & NPV & Storage/cell & Parameters & Training (s) & Time/patient (s) \\", r"\midrule"]
     for r in TO.itertuples():
-        L.append(f"{r.model} & {r.auroc:.3f} & {r.acc:.2f} & {r.sens:.2f} & {int(r.fn)}/12 & {r.spec:.2f} & {r.f1:.2f} & {r.npv:.2f} & {int(r.storage):,} B & "
+        L.append(f"{r.model} & {r.auroc:.3f} & {r.acc:.2f} & {cpr(r.sens, 12)} & {int(r.fn)}/12 & {cpr(r.spec, 12)} & {r.f1:.2f} & {npv_s(r.npv, r.fn, r.spec)} & {int(r.storage):,} B & "
                  + ("--" if np.isnan(r.params) else f"{int(r.params):,}") + " & " + ("--" if np.isnan(r.train_s) else f"{r.train_s:.2f}") + f" & {r.t_patient:.0f} \\\\")
     L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
     (TAB / "tab_tradeoff.tex").write_text("\n".join(L))
@@ -1028,7 +1052,7 @@ if (RS / "shift" / "shift_test.csv").exists():
          r"Dataset & Representation & AUROC & Null mean (95th pct.) & $p$ & Perm. \\", r"\midrule"]
     for ds, grp in sh.groupby("dataset", sort=False):
         for i, r in enumerate(grp.itertuples()):
-            pv = f"<{1 / (r.permutations + 1):.3f}" if r.p_value <= 1 / (r.permutations + 1) + 1e-12 else f"{r.p_value:.3f}"
+            pv = f"$\\leq${1 / (r.permutations + 1):.3f}" if r.p_value <= 1 / (r.permutations + 1) + 1e-12 else f"{r.p_value:.3f}"
             L.append(f"{ds if i == 0 else ''} & {r.representation} & {r.cohort_auroc:.3f} & {r.null_mean:.3f} ({r.null_95:.3f}) & {pv} & {r.permutations} \\\\")
         L.append(r"\midrule")
     L[-1] = r"\bottomrule"

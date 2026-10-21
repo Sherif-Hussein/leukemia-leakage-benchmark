@@ -1,31 +1,31 @@
 \begin{table*}[!t]
 \centering
-\caption{Comparison with existing methods on the same APL-AML cohort. Upper block: results as reported by the original studies, whose protocols differ from ours. Lower blocks: methods re-run on the identical split (trained on Discovery, tested once on the 24 Validation patients) with the same operating-point rule (sensitivity $\geq$ 0.95 on Discovery). The primary pipeline is compared with each of its members.}
+\caption{Comparison with existing methods on the same APL-AML cohort. Upper block: results as reported by the original studies, whose protocols differ from ours. Lower blocks: methods re-run on the identical split (trained on Discovery, tested once on the 24 Validation patients) with the same operating-point rule (sensitivity $\geq$ 0.95 on Discovery). The primary pipeline is compared with each of its members. Recall and specificity with exact (Clopper--Pearson) 95\% CIs over 12 patients each; NPV n/a: no patient called negative.}
 \label{tab:compare}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{p{4.6cm}p{3.6cm}ccccccc}
 \toprule
-Method & Evaluation & AUROC [95\% CI] & Recall (missed) & Spec. & F1 & NPV & Acc. \\
+Method & Evaluation & AUROC [95\% CI] & Recall (95\% CI) [missed] & Spec. (95\% CI) & F1 & NPV & Acc. \\
 \midrule
 \multicolumn{8}{l}{\emph{As reported in the literature}} \\
-Single-cell CNN, Sidhom \emph{et al.} \cite{sidhom2021apl} & Temporal validation, cell level & 0.743 & -- & -- & -- & -- & -- \\
+Single-cell CNN, Sidhom \emph{et al.} \cite{sidhom2021apl} & Temporal validation, single-cell classifier & 0.743 & -- & -- & -- & -- & -- \\
 Annotation-free MIL, Manescu \emph{et al.} \cite{manescu2023apl} & Random 3-fold CV, patient level & 0.96 $\pm$ 0.02 & -- & -- & -- & -- & -- \\
 Ten clinicians (reader study in \cite{sidhom2021apl}) & Same 24 Validation patients, smear images & \multicolumn{6}{l}{shown only graphically; the authors' MIL model was equivalent or better} \\
 \midrule
 \multicolumn{8}{l}{\emph{Re-run on the identical split (Validation cohort, patient level)}} \\
-Promyelocyte proportion (biomarker in \cite{sidhom2021apl}) & Same protocol & 0.611 [0.371, 0.837] & 1.00 (0/12) & 0.00 & 0.67 & 0.00 & 0.50 \\
-Differential count + LR (comparator in \cite{dasdelen2026caitomorph}) & Same protocol & 0.681 [0.437, 0.886] & 1.00 (0/12) & 0.08 & 0.69 & 1.00 & 0.54 \\
-CNN features + SVM (design of \cite{kasim2025multiclass}) & Same protocol & 0.806 [0.615, 0.963] & 0.50 (6/12) & 0.75 & 0.57 & 0.60 & 0.62 \\
-Single-cell classifier, engineered (design of \cite{sidhom2021apl}) & Same protocol & 0.681 [0.445, 0.908] & 0.75 (3/12) & 0.50 & 0.67 & 0.67 & 0.62 \\
-Single-cell classifier, EfficientNet-B0 (design of \cite{sidhom2021apl}) & Same protocol & 0.799 [0.580, 0.972] & 0.58 (5/12) & 0.92 & 0.70 & 0.69 & 0.75 \\
-Single-cell classifier, fusion (design of \cite{sidhom2021apl}) & Same protocol & 0.764 [0.536, 0.957] & 0.75 (3/12) & 0.75 & 0.75 & 0.75 & 0.75 \\
+Promyelocyte proportion (biomarker in \cite{sidhom2021apl}) & Same protocol & 0.611 [0.371, 0.837] & 1.00 (0.74--1.00) [0] & 0.00 (0.00--0.26) & 0.67 & n/a & 0.50 \\
+Differential count + LR (comparator in \cite{dasdelen2026caitomorph}) & Same protocol & 0.681 [0.437, 0.886] & 1.00 (0.74--1.00) [0] & 0.08 (0.00--0.38) & 0.69 & 1.00 & 0.54 \\
+CNN features + SVM (design of \cite{kasim2025multiclass}) & Same protocol & 0.806 [0.615, 0.963] & 0.50 (0.21--0.79) [6] & 0.75 (0.43--0.95) & 0.57 & 0.60 & 0.62 \\
+Single-cell classifier, engineered (design of \cite{sidhom2021apl}) & Same protocol & 0.681 [0.445, 0.908] & 0.75 (0.43--0.95) [3] & 0.50 (0.21--0.79) & 0.67 & 0.67 & 0.62 \\
+Single-cell classifier, EfficientNet-B0 (design of \cite{sidhom2021apl}) & Same protocol & 0.799 [0.580, 0.972] & 0.58 (0.28--0.85) [5] & 0.92 (0.62--1.00) & 0.70 & 0.69 & 0.75 \\
+Single-cell classifier, fusion (design of \cite{sidhom2021apl}) & Same protocol & 0.764 [0.536, 0.957] & 0.75 (0.43--0.95) [3] & 0.75 (0.43--0.95) & 0.75 & 0.75 & 0.75 \\
 \midrule
 \multicolumn{8}{l}{\emph{This work (pre-specified pipelines and their members)}} \\
-\textbf{Primary pipeline (ensemble)} & Same protocol & 0.806 [0.615, 0.956] & 1.00 (0/12) & 0.17 & 0.71 & 1.00 & 0.58 \\
-Member: engineered, pooled LR & Same protocol & 0.757 [0.555, 0.938] & 1.00 (0/12) & 0.17 & 0.71 & 1.00 & 0.58 \\
-Member: engineered, attention MIL & Same protocol & 0.812 [0.614, 0.963] & 1.00 (0/12) & 0.00 & 0.67 & 0.00 & 0.50 \\
-Member: Macenko + fine-tuned CNN & Same protocol & 0.771 [0.563, 0.941] & 0.83 (2/12) & 0.50 & 0.71 & 0.75 & 0.67 \\
-Secondary pipeline (Macenko + frozen CNN + PCA-64) & Same protocol & 0.639 [0.400, 0.867] & 0.92 (1/12) & 0.50 & 0.76 & 0.86 & 0.71 \\
+\textbf{Primary pipeline (ensemble)} & Same protocol & 0.806 [0.615, 0.956] & 1.00 (0.74--1.00) [0] & 0.17 (0.02--0.48) & 0.71 & 1.00 & 0.58 \\
+Member: engineered, pooled LR & Same protocol & 0.757 [0.555, 0.938] & 1.00 (0.74--1.00) [0] & 0.17 (0.02--0.48) & 0.71 & 1.00 & 0.58 \\
+Member: engineered, attention MIL & Same protocol & 0.812 [0.614, 0.963] & 1.00 (0.74--1.00) [0] & 0.00 (0.00--0.26) & 0.67 & n/a & 0.50 \\
+Member: Macenko + fine-tuned CNN & Same protocol & 0.771 [0.563, 0.941] & 0.83 (0.52--0.98) [2] & 0.50 (0.21--0.79) & 0.71 & 0.75 & 0.67 \\
+Secondary pipeline (Macenko + frozen CNN + PCA-64) & Same protocol & 0.639 [0.400, 0.867] & 0.92 (0.62--1.00) [1] & 0.50 (0.21--0.79) & 0.76 & 0.86 & 0.71 \\
 \bottomrule
 \end{tabular}
 \end{table*}

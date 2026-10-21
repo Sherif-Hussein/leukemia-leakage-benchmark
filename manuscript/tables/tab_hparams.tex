@@ -1,14 +1,14 @@
-\begin{table*}[!t]
-\centering
-\caption{Complete settings of every component. All values were fixed in advance or taken from library defaults; none was fitted or tuned on an external set. Defaults of the named libraries apply to anything not listed.}
-\label{tab:hparams}
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.05}
-\footnotesize
-\begin{tabular}{p{3.0cm}p{5.6cm}p{8.3cm}}
+{\footnotesize\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.05}
+\begin{longtable}{p{3.0cm}p{5.6cm}p{8.3cm}}
+\caption{Complete settings of every component. All values were fixed in advance or taken from library defaults; none was fitted or tuned on an external set, except that the preprocessing selection rule used external performance on a subset that included Validation patients (disclosed in the main text). Defaults of the named libraries apply to anything not listed.}\label{tab:hparams}\\
 \toprule
 Component & Setting & Value \\
 \midrule
+\endfirsthead
+\toprule
+Component & Setting & Value \\
+\midrule
+\endhead
 \multirow{5}{3.0cm}{Data and splits} & Development / external cohorts & APL-AML: Discovery (82 patients) / Validation (24 patients), split by diagnosis date by the data owners \\
  & Second dataset & C-NMC 2019: official folds 0--1 (42 subjects) / fold 2 (31 subjects), designated before any analysis \\
  & Cross-validation & 5 folds; image-level \texttt{StratifiedKFold} or patient-level \texttt{StratifiedGroupKFold} (cells), \texttt{StratifiedKFold} over patients (T3) \\
@@ -60,7 +60,6 @@ Component & Setting & Value \\
 \midrule
 \multirow{3}{3.0cm}{Additional analyses} & Pooled CV (APL-AML) & 3 repeats $\times$ 5-fold patient CV over all 106 patients, stratified by diagnosis and cohort; threshold from an inner 3-fold CV \\
  & Local recalibration & $k\in\{2,4,6,8\}$ local Validation patients ($k/2$ per class), 2,000 draws; threshold lowered to just below the lowest local APL score \\
- & Decision curves & Platt recalibration on Discovery out-of-fold scores, prior shift to 10\% prevalence, threshold probabilities 0.01--0.60 \\
+ & Decision curves & Platt recalibration on Discovery out-of-fold scores, prior shift to 10\% prevalence, threshold probabilities 0.01--0.60 (the figure in the main text shows 0--0.30) \\
 \bottomrule
-\end{tabular}
-\end{table*}
+\end{longtable}}

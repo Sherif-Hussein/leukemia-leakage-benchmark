@@ -1,6 +1,6 @@
 \begin{table*}[!t]
 \centering
-\caption{What each addition changes on new patients (external sets; cells: T1/T4, patients: T3/T5). Each block starts from a frozen ImageNet CNN; $\Delta$: AUROC change relative to the first row of the block. Threshold metrics at the operating point fixed on development data (target recall 0.95). Cell rows: mean of three seeds (frozen) or one seed (fine-tuned). The ensemble averages percentile scores of the fine-tuned CNN (with Macenko on APL-AML), engineered pooled LR and engineered attention MIL.}
+\caption{What each addition changes on new patients (external sets; cells: T1/T4, patients: T3/T5). Each block starts from a frozen ImageNet CNN; $\Delta$: AUROC change relative to the first row of the block. Threshold metrics at the operating point fixed on development data (target recall 0.95); patient rows give exact 95\% CIs for recall and specificity. Cell rows: mean of three seeds (frozen) or one seed (fine-tuned). The ensemble averages percentile scores of the fine-tuned CNN (with Macenko on APL-AML), engineered pooled LR and engineered attention MIL.}
 \label{tab:ladder}
 \setlength{\tabcolsep}{3.5pt}
 \resizebox{\textwidth}{!}{%
@@ -13,26 +13,28 @@ APL-AML & Cell & Frozen CNN + LR & 0.694 [0.556, 0.811] & -- & 0.56 & 0.81 & -- 
  &  & + fine-tuning & 0.773 [0.612, 0.890] & +0.079 & 0.45 & 1.00 & -- & 0.17 & 0.55 \\
  &  & + fine-tuning + Macenko & 0.752 [0.601, 0.864] & +0.058 & 0.44 & 0.99 & -- & 0.15 & 0.55 \\
 \midrule
-APL-AML & Patient & Frozen CNN, pooled + LR & 0.708 [0.493, 0.907] & -- & 0.67 & 0.67 & 4/12 & 0.67 & 0.67 \\
- &  & + PCA-64 & 0.792 [0.594, 0.957] & +0.083 & 0.62 & 0.50 & 6/12 & 0.75 & 0.57 \\
- &  & Frozen CNN + Macenko & 0.701 [0.482, 0.907] & -0.007 & 0.75 & 0.92 & 1/12 & 0.58 & 0.79 \\
- &  & \textbf{Frozen CNN + Macenko + PCA-64 (secondary)} & 0.639 [0.400, 0.867] & -0.069 & 0.71 & 0.92 & 1/12 & 0.50 & 0.76 \\
- &  & Fine-tuned CNN, mean of cells & 0.778 [0.576, 0.938] & +0.069 & 0.75 & 0.83 & 2/12 & 0.67 & 0.77 \\
- &  & Fine-tuned CNN + Macenko & 0.771 [0.563, 0.941] & +0.062 & 0.67 & 0.83 & 2/12 & 0.50 & 0.71 \\
- &  & Engineered, pooled + LR & 0.757 [0.555, 0.938] & +0.049 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 \\
- &  & Engineered, attention MIL & 0.812 [0.614, 0.963] & +0.104 & 0.50 & 1.00 & 0/12 & 0.00 & 0.67 \\
- &  & \textbf{Primary: ensemble (Macenko fine-tuned + engineered)} & 0.806 [0.615, 0.956] & +0.097 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 \\
+APL-AML & Patient & Frozen CNN, pooled + LR & 0.708 [0.493, 0.907] & -- & 0.67 & 0.67 (0.35--0.90) & 4/12 & 0.67 (0.35--0.90) & 0.67 \\
+ &  & + PCA-64 & 0.792 [0.594, 0.957] & +0.083 & 0.62 & 0.50 (0.21--0.79) & 6/12 & 0.75 (0.43--0.95) & 0.57 \\
+ &  & Frozen CNN + Macenko & 0.701 [0.482, 0.907] & -0.007 & 0.75 & 0.92 (0.62--1.00) & 1/12 & 0.58 (0.28--0.85) & 0.79 \\
+ &  & \textbf{Frozen CNN + Macenko + PCA-64 (secondary)} & 0.639 [0.400, 0.867] & -0.069 & 0.71 & 0.92 (0.62--1.00) & 1/12 & 0.50 (0.21--0.79) & 0.76 \\
+ &  & Fine-tuned CNN, mean of cells & 0.778 [0.576, 0.938] & +0.069 & 0.75 & 0.83 (0.52--0.98) & 2/12 & 0.67 (0.35--0.90) & 0.77 \\
+ &  & Fine-tuned CNN + Macenko & 0.771 [0.563, 0.941] & +0.062 & 0.67 & 0.83 (0.52--0.98) & 2/12 & 0.50 (0.21--0.79) & 0.71 \\
+ &  & Engineered, pooled + LR & 0.757 [0.555, 0.938] & +0.049 & 0.58 & 1.00 (0.74--1.00) & 0/12 & 0.17 (0.02--0.48) & 0.71 \\
+ &  & Engineered, attention MIL & 0.812 [0.614, 0.963] & +0.104 & 0.50 & 1.00 (0.74--1.00) & 0/12 & 0.00 (0.00--0.26) & 0.67 \\
+ &  & \textbf{Primary: ensemble (Macenko fine-tuned + engineered)} & 0.806 [0.615, 0.956] & +0.097 & 0.58 & 1.00 (0.74--1.00) & 0/12 & 0.17 (0.02--0.48) & 0.71 \\
+ &  & Sensitivity: primary without Macenko & 0.785 [0.585, 0.944] & +0.076 & 0.58 & 1.00 (0.74--1.00) & 0/12 & 0.17 (0.02--0.48) & 0.71 \\
+ &  & Sensitivity: primary, engineered also on Macenko images & 0.663 [0.427, 0.888] & -0.045 & 0.58 & 0.92 (0.62--1.00) & 1/12 & 0.25 (0.05--0.57) & 0.69 \\
 \midrule
 C-NMC & Cell & Frozen CNN + LR & 0.775 [0.640, 0.859] & -- & 0.79 & 0.96 & -- & 0.43 & 0.87 \\
  &  & Frozen CNN + engineered (fusion) & 0.817 [0.692, 0.892] & +0.042 & 0.83 & 0.95 & -- & 0.54 & 0.88 \\
  &  & + fine-tuning & 0.841 [0.715, 0.917] & +0.067 & 0.81 & 0.99 & -- & 0.42 & 0.88 \\
 \midrule
-C-NMC & Patient & Frozen CNN, pooled + LR & 0.908 [0.786, 0.992] & -- & 0.84 & 1.00 & 0/17 & 0.64 & 0.87 \\
- &  & + PCA-64 & 0.853 [0.705, 0.965] & -0.055 & 0.74 & 0.94 & 1/17 & 0.50 & 0.80 \\
- &  & Fine-tuned CNN, mean of cells & 0.962 [0.887, 1.000] & +0.055 & 0.81 & 1.00 & 0/17 & 0.57 & 0.85 \\
- &  & Engineered, pooled + LR & 0.941 [0.840, 1.000] & +0.034 & 0.87 & 0.94 & 1/17 & 0.79 & 0.89 \\
- &  & Engineered, attention MIL & 0.912 [0.791, 1.000] & +0.004 & 0.77 & 0.88 & 2/17 & 0.64 & 0.81 \\
- &  & \textbf{Primary: ensemble of the three members above} & 0.960 [0.886, 1.000] & +0.053 & 0.87 & 0.94 & 1/17 & 0.79 & 0.89 \\
+C-NMC & Patient & Frozen CNN, pooled + LR & 0.908 [0.786, 0.992] & -- & 0.84 & 1.00 (0.80--1.00) & 0/17 & 0.64 (0.35--0.87) & 0.87 \\
+ &  & + PCA-64 & 0.853 [0.705, 0.965] & -0.055 & 0.74 & 0.94 (0.71--1.00) & 1/17 & 0.50 (0.23--0.77) & 0.80 \\
+ &  & Fine-tuned CNN, mean of cells & 0.962 [0.887, 1.000] & +0.055 & 0.81 & 1.00 (0.80--1.00) & 0/17 & 0.57 (0.29--0.82) & 0.85 \\
+ &  & Engineered, pooled + LR & 0.941 [0.840, 1.000] & +0.034 & 0.87 & 0.94 (0.71--1.00) & 1/17 & 0.79 (0.49--0.95) & 0.89 \\
+ &  & Engineered, attention MIL & 0.912 [0.791, 1.000] & +0.004 & 0.77 & 0.88 (0.64--0.99) & 2/17 & 0.64 (0.35--0.87) & 0.81 \\
+ &  & \textbf{Primary: ensemble of the three members above} & 0.960 [0.886, 1.000] & +0.053 & 0.87 & 0.94 (0.71--1.00) & 1/17 & 0.79 (0.49--0.95) & 0.89 \\
 \bottomrule
 \end{tabular}}
 \end{table*}

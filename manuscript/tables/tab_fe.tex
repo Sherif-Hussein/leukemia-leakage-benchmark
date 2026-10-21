@@ -1,6 +1,6 @@
 \begin{table*}[!t]
 \centering
-\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort is scored once. $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}
+\caption{Feature engineering for patient-level APL detection. All steps are fitted inside the Discovery training folds; the Validation cohort was not used for fitting. PCA rows in this table use the whitened scaling of our first analysis (each component standardized), and the pooled LR of these experiments standardizes each feature, so its unreduced references differ from Table~\ref{tab:patient} and from the natural-scale analysis of the main text (engineered 0.729 vs.\ 0.757; EfficientNet-B0 0.743 vs.\ 0.722 and 0.708). $\Delta$: external AUROC change relative to the unreduced representation (paired patient bootstrap). The configuration with the highest Discovery CV AUROC (pre-declared selection rule) is marked $^{\star}$. Oracle column: specificity at 100\% recall if the threshold were re-set on the Validation cohort (reference only, not deployable).}
 \label{tab:fe}
 \setlength{\tabcolsep}{3pt}
 \resizebox{\textwidth}{!}{%

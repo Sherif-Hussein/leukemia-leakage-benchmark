@@ -10,9 +10,9 @@
 \cmidrule(lr){2-8}\cmidrule(lr){9-12}
 Pipeline & AUROC & Acc. & Recall & Missed & Spec. & F1 & NPV & Storage/cell & Parameters & Training (s) & Time/patient (s) \\
 \midrule
-Primary: Macenko + fine-tuned CNN + engineered, ensemble & 0.806 & 0.58 & 1.00 & 0/12 & 0.17 & 0.71 & 1.00 & 5,492 B & 4,038,033 & 631.00 & 80 \\
-Macenko + frozen CNN, no PCA & 0.701 & 0.75 & 0.92 & 1/12 & 0.58 & 0.79 & 0.88 & 5,120 B & 6,401 & 0.26 & 61 \\
-Secondary: Macenko + frozen CNN + PCA-64 & 0.639 & 0.71 & 0.92 & 1/12 & 0.50 & 0.76 & 0.86 & 256 B & 321 & 6.15 & 61 \\
+Primary: Macenko + fine-tuned CNN + engineered, ensemble & 0.806 & 0.58 & 1.00 (0.74--1.00) & 0/12 & 0.17 (0.02--0.48) & 0.71 & 1.00 & 5,492 B & 4,038,033 & 631.00 & 80 \\
+Macenko + frozen CNN, no PCA & 0.701 & 0.75 & 0.92 (0.62--1.00) & 1/12 & 0.58 (0.28--0.85) & 0.79 & 0.88 & 5,120 B & 6,401 & 0.26 & 61 \\
+Secondary: Macenko + frozen CNN + PCA-64 & 0.639 & 0.71 & 0.92 (0.62--1.00) & 1/12 & 0.50 (0.21--0.79) & 0.76 & 0.86 & 256 B & 321 & 6.15 & 61 \\
 \bottomrule
 \end{tabular}}
 \end{table*}

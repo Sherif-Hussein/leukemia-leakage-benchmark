@@ -155,7 +155,11 @@
    "sens": 0.6894,
    "spec": 0.5526,
    "f1": 0.5395,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0451,
+   "leak_hi": 0.1685,
+   "shift_lo": 0.065,
+   "shift_hi": 0.4317
   },
   {
    "task": "T1 APL-AML: diagnosis on cells (patient label)",
@@ -174,7 +178,11 @@
    "sens": 0.7282,
    "spec": 0.457,
    "f1": 0.5237,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0185,
+   "leak_hi": 0.077,
+   "shift_lo": 0.0729,
+   "shift_hi": 0.4214
   },
   {
    "task": "T1 APL-AML: diagnosis on cells (patient label)",
@@ -193,7 +201,11 @@
    "sens": 0.8095,
    "spec": 0.4256,
    "f1": 0.5558,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0719,
+   "leak_hi": 0.1604,
+   "shift_lo": 0.0445,
+   "shift_hi": 0.3228
   },
   {
    "task": "T1 APL-AML: diagnosis on cells (patient label)",
@@ -212,7 +224,11 @@
    "sens": 0.7801,
    "spec": 0.5365,
    "f1": 0.5856,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0499,
+   "leak_hi": 0.1329,
+   "shift_lo": 0.0486,
+   "shift_hi": 0.3113
   },
   {
    "task": "T2 APL-AML: blast detection (cell label)",
@@ -231,7 +247,11 @@
    "sens": 0.9905,
    "spec": 0.6211,
    "f1": 0.5835,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.011,
+   "leak_hi": 0.0401,
+   "shift_lo": -0.0324,
+   "shift_hi": 0.0272
   },
   {
    "task": "T2 APL-AML: blast detection (cell label)",
@@ -250,7 +270,11 @@
    "sens": 0.9799,
    "spec": 0.6999,
    "f1": 0.6286,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0083,
+   "leak_hi": 0.0209,
+   "shift_lo": -0.0309,
+   "shift_hi": 0.0314
   },
   {
    "task": "T2 APL-AML: blast detection (cell label)",
@@ -269,7 +293,11 @@
    "sens": 0.9569,
    "spec": 0.6383,
    "f1": 0.5757,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0187,
+   "leak_hi": 0.0412,
+   "shift_lo": -0.0338,
+   "shift_hi": 0.0502
   },
   {
    "task": "T2 APL-AML: blast detection (cell label)",
@@ -288,7 +316,11 @@
    "sens": 0.9625,
    "spec": 0.6793,
    "f1": 0.6051,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0152,
+   "leak_hi": 0.0367,
+   "shift_lo": -0.0255,
+   "shift_hi": 0.0456
   },
   {
    "task": "T4 C-NMC: cells (subject label)",
@@ -307,7 +339,11 @@
    "sens": 0.9478,
    "spec": 0.5845,
    "f1": 0.8887,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.023,
+   "leak_hi": 0.1434,
+   "shift_lo": -0.089,
+   "shift_hi": 0.1535
   },
   {
    "task": "T4 C-NMC: cells (subject label)",
@@ -326,7 +362,11 @@
    "sens": 0.9551,
    "spec": 0.4343,
    "f1": 0.8654,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.0357,
+   "leak_hi": 0.149,
+   "shift_lo": -0.053,
+   "shift_hi": 0.1952
   },
   {
    "task": "T4 C-NMC: cells (subject label)",
@@ -345,7 +385,11 @@
    "sens": 0.954,
    "spec": 0.5368,
    "f1": 0.8831,
-   "seeds": 3
+   "seeds": 3,
+   "leak_lo": 0.027,
+   "leak_hi": 0.1487,
+   "shift_lo": -0.0695,
+   "shift_hi": 0.1888
   }
  ],
  "patient": [
@@ -3580,7 +3624,7 @@
   {
    "dataset": "APL-AML",
    "k": 64,
-   "label": "After: PCA-64",
+   "label": "After: PCA-64 (rule)",
    "auroc": 0.7917,
    "acc": 0.625,
    "sens": 0.5,
@@ -3592,7 +3636,7 @@
   {
    "dataset": "APL-AML",
    "k": 256,
-   "label": "After: PCA-256 (rule)",
+   "label": "PCA-256 (best dev.\\ CV, full sweep)",
    "auroc": 0.7778,
    "acc": 0.625,
    "sens": 0.5,
@@ -3628,7 +3672,7 @@
   {
    "dataset": "C-NMC",
    "k": 64,
-   "label": "After: PCA-64",
+   "label": "After: PCA-64 (rule)",
    "auroc": 0.8529,
    "acc": 0.7419,
    "sens": 0.9412,
@@ -3636,18 +3680,6 @@
    "spec": 0.5,
    "f1": 0.8,
    "npv": 0.875
-  },
-  {
-   "dataset": "C-NMC",
-   "k": 1280,
-   "label": "No PCA (rule)",
-   "auroc": 0.9076,
-   "acc": 0.8387,
-   "sens": 1.0,
-   "fn": 0.0,
-   "spec": 0.6429,
-   "f1": 0.8718,
-   "npv": 1.0
   }
  ],
  "finetune_cell": [
@@ -6210,6 +6242,34 @@
    "fn": 0.0,
    "spec": 0.1667,
    "f1": 0.7059,
+   "npos": 12.0
+  },
+  {
+   "dataset": "APL-AML",
+   "level": "patient",
+   "step": "Sensitivity: primary without Macenko",
+   "auroc": 0.7847,
+   "lo": 0.5851,
+   "hi": 0.9441,
+   "acc": 0.5833,
+   "sens": 1.0,
+   "fn": 0.0,
+   "spec": 0.1667,
+   "f1": 0.7059,
+   "npos": 12.0
+  },
+  {
+   "dataset": "APL-AML",
+   "level": "patient",
+   "step": "Sensitivity: primary, engineered also on Macenko images",
+   "auroc": 0.6632,
+   "lo": 0.4271,
+   "hi": 0.8881,
+   "acc": 0.5833,
+   "sens": 0.9167,
+   "fn": 1.0,
+   "spec": 0.25,
+   "f1": 0.6875,
    "npos": 12.0
   },
   {
