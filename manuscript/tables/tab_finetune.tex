@@ -1,0 +1,23 @@
+\begin{table}[!t]
+\centering
+\caption{Fine-tuned versus frozen CNN features at cell level (APL-AML). The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{tab:hparams}); one seed. Recall, specificity and F1 on the external cohort at the operating point fixed on Discovery.}
+\label{tab:finetune}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llcccccc}
+\toprule
+Task & Model & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 \\
+\midrule
+T1 & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.69 & 0.55 & 0.54 \\
+ & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.73 & 0.46 & 0.52 \\
+ & EfficientNet-B0 + LR & 0.975 & 0.867 & 0.694 [0.556, 0.811] & 0.81 & 0.43 & 0.56 \\
+ & Fusion + LR & 0.985 & 0.901 & 0.734 [0.595, 0.848] & 0.78 & 0.54 & 0.59 \\
+ & Fine-tuned EfficientNet-B0 & -- & 0.875 & \textbf{0.773 [0.612, 0.890]} & 1.00 & 0.17 & 0.55 \\
+\midrule
+T2 & Engineered + LightGBM & 0.978 & 0.954 & \textbf{0.957 [0.931, 0.977]} & 0.99 & 0.62 & 0.58 \\
+ & Engineered + LR & 0.965 & 0.951 & 0.951 [0.922, 0.972] & 0.98 & 0.70 & 0.63 \\
+ & EfficientNet-B0 + LR & 0.956 & 0.926 & 0.920 [0.874, 0.956] & 0.96 & 0.64 & 0.58 \\
+ & Fusion + LR & 0.964 & 0.940 & 0.931 [0.894, 0.961] & 0.96 & 0.68 & 0.61 \\
+\bottomrule
+\end{tabular}}
+\end{table}

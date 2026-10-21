@@ -1,0 +1,10 @@
+task,model,image_cv,grouped_cv,ext,lo,hi,sens,spec,f1
+T1 Diagnosis on cells,Engineered + LightGBM,0.9873,0.8959,0.6689,0.4954,0.8106,0.6894,0.5526,0.5395
+T1 Diagnosis on cells,Engineered + LR,0.9377,0.8953,0.6579,0.4776,0.7984,0.7282,0.457,0.5237
+T1 Diagnosis on cells,EfficientNet-B0 + LR,0.9754,0.867,0.6941,0.5564,0.8113,0.8095,0.4256,0.5558
+T1 Diagnosis on cells,Fusion + LR,0.9845,0.9013,0.7343,0.5947,0.8478,0.7801,0.5365,0.5856
+T1 Diagnosis on cells,Fine-tuned EfficientNet-B0,,0.8746359196180165,0.7734300723431158,0.6124515849089698,0.88969290372507,0.9962121212121212,0.1666666666666666,0.5512801317562509
+T2 Blast detection,Engineered + LightGBM,0.9782,0.9537,0.9572,0.9307,0.9768,0.9905,0.6211,0.5835
+T2 Blast detection,Engineered + LR,0.9647,0.9508,0.9513,0.9221,0.972,0.9799,0.6999,0.6286
+T2 Blast detection,EfficientNet-B0 + LR,0.9555,0.9265,0.9199,0.8741,0.9559,0.9569,0.6383,0.5757
+T2 Blast detection,Fusion + LR,0.9642,0.9402,0.9315,0.8944,0.961,0.9625,0.6793,0.6051

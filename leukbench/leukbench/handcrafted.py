@@ -236,9 +236,21 @@ def features_from_rgb(rgb: np.ndarray) -> dict:
     return f
 
 
-def features_from_path(path: str) -> dict:
+def black_background_to_white(rgb: np.ndarray, level: int = 15) -> np.ndarray:
+    """For pre-segmented datasets (e.g. C-NMC) that place the cell on a black background: pixels whose
+    brightest channel is below `level` become white, so the background looks like an unstained smear
+    background and the same segmentation applies."""
+    rgb = rgb.copy()
+    rgb[rgb.max(2) < level] = 255
+    return rgb
+
+
+def features_from_path(path: str, black_bg: bool = False) -> dict:
     try:
-        rgb = np.asarray(Image.open(path).convert("RGB").resize((SIZE, SIZE), Image.BILINEAR))
+        rgb = np.asarray(Image.open(path).convert("RGB"))
+        if black_bg:
+            rgb = black_background_to_white(rgb)
+        rgb = np.asarray(Image.fromarray(rgb).resize((SIZE, SIZE), Image.BILINEAR))
         return features_from_rgb(rgb)
     except Exception as e:  # corrupt image etc. -> all-NaN row, imputed later inside the training fold
         print(f"  feature error {path}: {e}")

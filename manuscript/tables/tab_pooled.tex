@@ -1,0 +1,22 @@
+\begin{table}[!t]
+\centering
+\caption{Secondary analysis with more statistical power: repeated (3$\times$) 5-fold patient-level CV over all 106 APL-AML patients. This is an internal analysis, not an external validation. $\Delta$: AUROC difference vs.\ the unreduced EfficientNet-B0 embedding (paired patient bootstrap on repeat-averaged scores). Recall, specificity and F1 at a threshold chosen for sensitivity $\ge0.95$ inside each training fold.}
+\label{tab:pooled}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Model & AUROC [95\% CI] & $\Delta$ vs.\ no PCA & Recall (missed/34) & Spec. & F1 \\
+\midrule
+Promyelocyte fraction (biomarker) & 0.677 [0.572, 0.784] & -0.275*$^{\dagger}$ & 1.00 (0.0) & 0.00 & 0.49 \\
+Engineered, pooled LR & 0.893 [0.823, 0.949] & -0.059*$^{\dagger}$ & 0.94 (2.0) & 0.42 & 0.59 \\
+EfficientNet-B0, no PCA & 0.953 [0.898, 0.989] & -- & 0.95 (1.7) & 0.53 & 0.64 \\
+EfficientNet-B0 + PCA-16 & 0.878 [0.802, 0.941] & -0.074*$^{\dagger}$ & 0.98 (0.7) & 0.35 & 0.58 \\
+EfficientNet-B0 + PCA-32 & 0.947 [0.897, 0.985] & -0.005 & 0.96 (1.3) & 0.60 & 0.69 \\
+EfficientNet-B0 + PCA-64 & 0.942 [0.892, 0.979] & -0.011 & 0.95 (1.7) & 0.63 & 0.70 \\
+Engineered + PCA-32 fusion & 0.922 [0.853, 0.973] & -0.030 & 0.95 (1.7) & 0.58 & 0.67 \\
+Engineered, attention MIL & 0.867 [0.794, 0.931] & -0.086* & 0.89 (3.7) & 0.52 & 0.62 \\
+\bottomrule
+\multicolumn{6}{l}{\footnotesize * $p<0.05$ unadjusted; $^{\dagger}$ after Holm correction.}
+\end{tabular}}
+\end{table}

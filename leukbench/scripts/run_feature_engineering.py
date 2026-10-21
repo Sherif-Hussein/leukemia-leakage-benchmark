@@ -58,6 +58,10 @@ ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
 ap.add_argument("--configs", nargs="*")
 ap.add_argument("--max-cells", type=int, default=500)
 ap.add_argument("--n-boot", type=int, default=2000)
+ap.add_argument("--positive", default="APL", help="diagnosis value of the positive class")
+ap.add_argument("--cohort-col", default="cohort")
+ap.add_argument("--dev", default="Discovery")
+ap.add_argument("--ext", default="Validation")
 ap.add_argument("--out", required=True)
 a = ap.parse_args()
 torch.set_num_threads(1)
@@ -67,10 +71,11 @@ man = pd.read_csv(a.manifest, keep_default_na=False)
 Hdf = pd.read_parquet(a.hand) if a.hand.endswith(".parquet") else pd.read_csv(a.hand)
 H = Hdf.to_numpy("float32"); E = load_feature_block(a.effnet)
 stain_cols = np.array([bool(re.search(STAIN, c)) for c in Hdf.columns])
-man["y"] = (man.diagnosis == "APL").astype(int)
+man["y"] = (man.diagnosis == a.positive).astype(int)
+man["cohort"] = man[a.cohort_col]
 ctype = man.cell_type.map(CELL_CLASSES)
 pt = man.groupby("patient_id").agg(y=("y", "first"), cohort=("cohort", "first")).reset_index()
-disc, val = pt[pt.cohort == "Discovery"].reset_index(drop=True), pt[pt.cohort == "Validation"].reset_index(drop=True)
+disc, val = pt[pt.cohort == a.dev].reset_index(drop=True), pt[pt.cohort == a.ext].reset_index(drop=True)
 rng0 = np.random.default_rng(0)
 rows_of = {}
 for pid, g in man.groupby("patient_id"):
@@ -134,6 +139,27 @@ class CellTransform:
 
 def pooled(X):
     return np.concatenate([np.nanmean(X, 0), np.nanstd(X, 0), *np.nanpercentile(X, [10, 50, 90], axis=0)])
+
+
+class GlobalScaler:
+    """Divides every column by ONE common scale (overall SD of the training matrix after centering).
+    Used for PCA scores so that components keep their relative variances (no whitening): the L2 penalty
+    then shrinks low-variance components more, as it does for the unreduced embedding."""
+
+    def fit(self, X, y=None):
+        self.mu = np.nanmean(X, 0); self.s = np.nanstd(X - self.mu) + 1e-9
+        return self
+
+    def transform(self, X):
+        return (X - self.mu) / self.s
+
+    def get_params(self, deep=True):
+        return {}
+
+
+def lr_global(C=0.1):
+    return Pipeline([("i", SimpleImputer(strategy="median")), ("s", GlobalScaler()),
+                     ("c", LogisticRegression(C=C, max_iter=5000, class_weight="balanced"))])
 
 
 def lr(penalty="l2", C=0.1):
@@ -205,11 +231,11 @@ def run_config(cfg, seed):
                 P_ = lambda ps: np.asarray([pooled(T.transform(rows_of[p])) for p in ps])
                 Xtr, Xte, Xva = np.hstack([Xtr, P_(tr_p)]), np.hstack([Xte, P_(te_p)]), np.hstack([Xva, P_(va_p)])
         else:
-            kind = {"eng_l1": "eng_raw"}.get(cfg, cfg)
+            kind = {"eng_l1": "eng_raw"}.get(cfg, cfg).replace("_nw", "")
             T = CellTransform(kind).fit(np.concatenate([rows_of[p] for p in tr_p]))
             P_ = lambda ps: np.asarray([pooled(T.transform(rows_of[p])) for p in ps])
             Xtr, Xte, Xva = P_(tr_p), P_(te_p), P_(va_p)
-        clf = (lr("l1", 0.5) if cfg == "eng_l1" else lr()).fit(Xtr, ytr)
+        clf = (lr("l1", 0.5) if cfg == "eng_l1" else lr_global() if cfg.endswith("_nw") else lr()).fit(Xtr, ytr)
         oof[te] = clf.predict_proba(Xte)[:, 1]
         ext.append(clf.predict_proba(Xva)[:, 1])
     return oof, np.mean(ext, axis=0)
@@ -236,6 +262,10 @@ for cfg in CONFIGS:
     rec["oracle_spec_at_recall1"] = MT.point_metrics(val.y.values, ext_m, ext_m[val.y.values == 1].min() - 1e-9)["spec"]
     rows.append(rec)
     preds.append(pd.DataFrame(dict(config=cfg, patient_id=val.patient_id, y=val.y, p=ext_m)))
+    # Discovery out-of-fold predictions (seed mean) and the fixed sens95 threshold, for later analyses
+    pd.DataFrame(dict(config=cfg, patient_id=disc.patient_id, y=disc.y, p=oof_m,
+                      thr_sens95=MT.threshold_for_sensitivity(disc.y.values, oof_m, 0.95))).to_csv(
+        out / f"oof_{cfg}.csv", index=False)
     print(f"  {cfg:16s} CV AUROC {rec['cv_auroc']:.3f}±{rec['cv_sd']:.3f} | external AUROC {rec['ext_auroc']:.3f} "
           f"[{rec['ext_lo']:.3f}, {rec['ext_hi']:.3f}] | sens95: recall {rec['sens95_sens']:.2f} spec {rec['sens95_spec']:.2f} | "
           f"youden: recall {rec['youden_sens']:.2f} spec {rec['youden_spec']:.2f} | oracle spec@recall1 {rec['oracle_spec_at_recall1']:.2f} ({time.time() - t0:.0f}s)", flush=True)

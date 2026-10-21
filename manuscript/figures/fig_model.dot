@@ -1,27 +1,36 @@
 digraph M {
-  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=10, nodesep=0.22, ranksep=0.35, margin=0.05, compound=true];
+  graph [rankdir=LR, fontname="DejaVu Sans", fontsize=10, nodesep=0.2, ranksep=0.32, margin=0.05, compound=true];
   node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=9];
   edge  [color="#5B6575", arrowsize=0.6];
   cell [label="Single-cell\nimage", shape=box, fillcolor="#DCE6F5"];
-  subgraph cluster_rep { label="Representation"; fontsize=9; style=dashed; color="#9AA4B2";
-    h [label="Engineered\n93-d"]; e [label="EfficientNet-B0\n1,280-d (frozen)"]; d [label="DinoBloom-B\n768-d (frozen)"];
+  subgraph cluster_rep { label="Cell representation"; fontsize=9; style=dashed; color="#9AA4B2";
+    h  [label="Engineered\n93-d (interpretable)"];
+    e  [label="EfficientNet-B0\nfrozen, 1,280-d"];
+    pca [label="optional PCA\nk components,\nnatural scale", fillcolor="#FFFFFF"];
+    ft [label=<Fine-tuned EfficientNet-B0<BR/>stages 6-7 + head trained<BR/>pooling: average <I>or</I> attention<BR/>&#945;<SUB>p</SUB> over 7&#215;7 positions>, fillcolor="#E4F1E4"];
   }
-  f [label="Fusion\n(concatenate +\nstandardise)"];
-  subgraph cluster_cell { label="Cell-level classifier (T1, T2)"; fontsize=9; style=dashed; color="#9AA4B2";
+  f [label="Fusion\n(concatenate +\nscale)"];
+  subgraph cluster_cell { label="Cell level (T1, T2, T4)"; fontsize=9; style=dashed; color="#9AA4B2";
     lr [label="Logistic regression\nor LightGBM"];
+    ftc [label="Fine-tuned\nclassifier head"];
   }
-  subgraph cluster_pat { label="Patient-level model (T3)"; fontsize=9; style=dashed; color="#9AA4B2";
-    bag [label="Bag of &#8804; 500\ncell vectors"];
-    att [label=<Gated attention<BR/>a<SUB>k</SUB> = softmax(<I>w</I><SUP>T</SUP>(tanh(<I>V</I>h<SUB>k</SUB>) &#8857; &#963;(<I>U</I>h<SUB>k</SUB>)))>];
-    agg [margin="0.15,0.12", label=<z = &#931;<SUB>k</SUB> a<SUB>k</SUB> h<SUB>k</SUB><BR/>&#8594; linear &#8594; logit>];
-    pool [label="Baseline: pooled\nmean, SD, P10/50/90\n&#8594; logistic regression"];
+  subgraph cluster_pat { label="Patient / subject level (T3, T5)"; fontsize=9; style=dashed; color="#9AA4B2";
+    bag  [label="Bag of up to 500\ncell vectors"];
+    pool [label="Pooled mean, SD,\nP10/50/90 &#8594; LR"];
+    att  [label=<Gated attention MIL<BR/>weight a<SUB>k</SUB> for each cell<BR/>z = &#931;<SUB>k</SUB> a<SUB>k</SUB> h<SUB>k</SUB> &#8594; logit>];
+    mean [label="Mean of fine-tuned\ncell probabilities"];
+    ens  [label="Ensemble: mean of\npercentile scores\n(pre-specified)", fillcolor="#E4F1E4"];
   }
-  cal [label="Temperature scaling\n+ threshold\n(inner validation)", fillcolor="#FCEBD0"];
-  out [label="P(blast) / P(APL)\n+ attention per cell", fillcolor="#DCE6F5"];
-  cell -> h; cell -> e; cell -> d;
-  h -> f; e -> f; d -> f;
-  f -> lr -> cal;
-  f -> bag -> att -> agg -> cal;
-  bag -> pool -> cal;
-  cal -> out;
+  thr [label="Threshold for recall &#8805; 0.95\nchosen on development data\n(+ optional local recalibration)", fillcolor="#FCEBD0"];
+  out [label="P(blast / APL / ALL)\nmissed cases, recall, F1\n+ attention per cell", fillcolor="#DCE6F5"];
+  cell -> h; cell -> e; cell -> ft;
+  e -> pca [style=dashed];
+  h -> f; e -> f;
+  f -> lr; ft -> ftc;
+  f -> bag; pca -> bag [style=dashed];
+  bag -> pool; bag -> att;
+  ftc -> mean;
+  pool -> ens; att -> ens; mean -> ens;
+  lr -> thr; ftc -> thr; pool -> thr; att -> thr; mean -> thr; ens -> thr;
+  thr -> out;
 }

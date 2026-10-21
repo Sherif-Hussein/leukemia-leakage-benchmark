@@ -1,0 +1,27 @@
+\begin{table*}[!t]
+\centering
+\caption{Replication on the second dataset, C-NMC 2019 (ALL vs.\ normal B cells; development: official folds 0--1, 42 subjects; external: fold 2, 31 unseen subjects, 17 with ALL). Same features, models, protocol and operating-point rule as for APL-AML.}
+\label{tab:cnmc}
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llccccccc}
+\toprule
+\multicolumn{9}{l}{\emph{(a) Cell level: every cell carries its subject's diagnosis (mean of 3--3 seeds)}} \\
+Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Inflation \\
+\midrule
+Engineered + LR & & 0.933 & 0.864 & 0.840 [0.730, 0.902] & 0.95 & 0.58 & 0.89 & +0.093 \\
+EfficientNet-B0 + LR & & 0.912 & 0.834 & 0.775 [0.640, 0.859] & 0.96 & 0.43 & 0.87 & +0.137 \\
+Fusion + LR & & 0.939 & 0.864 & 0.817 [0.692, 0.892] & 0.95 & 0.54 & 0.88 & +0.122 \\
+\midrule
+\multicolumn{9}{l}{\emph{(b) Subject level: is this subject's sample leukemic?}} \\
+Representation & Aggregation & CV AUROC & & External [95\% CI] & Recall (missed) & Spec. & F1 & NPV \\
+\midrule
+Engineered & Pooled + LR & 0.906 & & 0.941 [0.840, 1.000] & 0.94 (1/17) & 0.79 & 0.89 & 0.92 \\
+EfficientNet-B0 & Pooled + LR & 0.855 & & 0.920 [0.807, 0.992] & 0.94 (1/17) & 0.71 & 0.86 & 0.91 \\
+Fusion & Pooled + LR & 0.878 & & 0.929 [0.824, 0.996] & 1.00 (0/17) & 0.71 & 0.89 & 1.00 \\
+Engineered & Attention MIL & 0.881 & & 0.912 [0.791, 1.000] & 0.88 (2/17) & 0.64 & 0.81 & 0.82 \\
+EfficientNet-B0 & Attention MIL & 0.874 & & 0.853 [0.704, 0.963] & 1.00 (0/17) & 0.43 & 0.81 & 1.00 \\
+Fusion & Attention MIL & 0.887 & & 0.853 [0.696, 0.967] & 1.00 (0/17) & 0.57 & 0.85 & 1.00 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

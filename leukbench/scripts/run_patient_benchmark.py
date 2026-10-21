@@ -46,7 +46,8 @@ ap.add_argument("--seeds", nargs="+", type=int, default=[0])
 ap.add_argument("--cv-where", nargs="*")
 ap.add_argument("--test-where", nargs="*")
 ap.add_argument("--max-cells", type=int, default=500, help="cells sampled per patient bag (0 = all)")
-ap.add_argument("--epochs", type=int, default=40)
+ap.add_argument("--epochs", type=int, default=40, help="MIL epochs; 0 = choose by inner 3-fold patient CV (lowest mean validation loss, up to --max-epochs)")
+ap.add_argument("--max-epochs", type=int, default=40)
 ap.add_argument("--threshold", default="sens95", choices=["sens95", "youden"])
 ap.add_argument("--ext-sens", type=float, default=0.95, help="target sensitivity for the external operating point")
 ap.add_argument("--n-boot", type=int, default=2000)
@@ -89,6 +90,21 @@ def pick_threshold(y, p):
     return MT.threshold_for_sensitivity(y, p, 0.95) if a.threshold == "sens95" else MT.youden_threshold(y, p)
 
 
+CHOSEN_EPOCHS = []
+
+
+def choose_epochs(X, rows, y, seed):
+    """Nested early stopping: inner 3-fold patient CV inside the training patients; the epoch with the lowest
+    mean validation loss (a proper scoring rule) is chosen, then the model is retrained on all of them."""
+    from sklearn.model_selection import StratifiedKFold
+    curves = []
+    for itr, iva in StratifiedKFold(3, shuffle=True, random_state=seed).split(np.zeros(len(y)), y):
+        f = train_abmil([X[rows[i]] for i in itr], y[itr], seed=seed, epochs=a.max_epochs,
+                        monitor={"val": ([X[rows[i]] for i in iva], y[iva])})
+        curves.append([h["val_loss"] for h in f.history])
+    return int(np.argmin(np.mean(curves, 0))) + 1
+
+
 def fit_predict(X, tr_rows, y_tr, eval_sets, kind, seeds):
     """Fit on an inner 80% of training patients; threshold + temperature on the inner 20%.
     eval_sets: list of row-lists. Returns (list of prob arrays, threshold, attention of last set)."""
@@ -100,7 +116,9 @@ def fit_predict(X, tr_rows, y_tr, eval_sets, kind, seeds):
         predict = lambda rows: clf.predict_proba(pool(rows))[:, 1]
         att = None
     else:
-        fns = [train_abmil([X[tr_rows[i]] for i in itr], y_tr[itr], seed=s, epochs=a.epochs) for s in seeds]
+        ep = a.epochs or choose_epochs(X, [tr_rows[i] for i in itr], y_tr[itr], seeds[0])
+        CHOSEN_EPOCHS.append((mname, ep))
+        fns = [train_abmil([X[tr_rows[i]] for i in itr], y_tr[itr], seed=s, epochs=ep) for s in seeds]
         predict = lambda rows: np.mean([f([X[r] for r in rows]) for f in fns], axis=0)
         att = lambda rows: [np.mean(z, axis=0) for z in zip(*[f([X[r] for r in rows], True)[1] for f in fns])]
     p_va = predict([tr_rows[i] for i in iva])
@@ -173,4 +191,7 @@ for mname, (bnames, kind) in models.items():
 pd.DataFrame(summary).to_csv(out / "summary.csv", index=False)
 pd.concat(preds).to_csv(out / "predictions.csv", index=False)
 save_json(vars(a), out / "config.json")
+if CHOSEN_EPOCHS:
+    pd.DataFrame(CHOSEN_EPOCHS, columns=["model", "epochs"]).to_csv(out / "chosen_epochs.csv", index=False)
+    print(pd.DataFrame(CHOSEN_EPOCHS, columns=["model", "epochs"]).groupby("model").epochs.describe())
 print(f"wrote {out}/summary.csv")

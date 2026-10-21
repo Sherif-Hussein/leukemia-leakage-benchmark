@@ -13,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 import sys
+from functools import partial
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # package root (works with python -I)
 from leukbench.handcrafted import features_from_path
 
@@ -20,13 +21,14 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--manifest", required=True)
 ap.add_argument("--out", required=True)
 ap.add_argument("--workers", type=int, default=4)
+ap.add_argument("--black-bg-to-white", action="store_true", help="pre-segmented cells on black background (C-NMC)")
 a = ap.parse_args()
 
 paths = pd.read_csv(a.manifest)["path"].tolist()
 t0 = time.time()
 rows = []
 with Pool(a.workers) as pool:
-    for i, r in enumerate(pool.imap(features_from_path, paths, chunksize=32)):
+    for i, r in enumerate(pool.imap(partial(features_from_path, black_bg=a.black_bg_to_white), paths, chunksize=32)):
         rows.append(r)
         if (i + 1) % 2000 == 0:
             el = time.time() - t0

@@ -1,0 +1,20 @@
+\begin{table*}[!t]
+\centering
+\caption{Can a new laboratory restore the operating point with a few local cases? $k$ confirmed local patients ($k/2$ APL, $k/2$ AML) are drawn from the Validation cohort and the remaining $24-k$ patients are scored (2,000 random draws). R0: development threshold. R2: development threshold lowered, if needed, to just below the lowest score of the local APL cases. P(miss): probability that at least one APL patient in the test set is missed.}
+\label{tab:recal}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{4}{c}{R0, $k=0$} & \multicolumn{4}{c}{R2, $k=4$} & \multicolumn{4}{c}{R2, $k=8$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}
+Model & Recall & Spec. & F1 & P(miss) & Recall & Spec. & F1 & P(miss) & Recall & Spec. & F1 & P(miss) \\
+\midrule
+EfficientNet-B0, no PCA & 0.50 & 0.67 & 0.55 & 1.00 & 0.69 & 0.56 & 0.63 & 0.84 & 0.80 & 0.49 & 0.68 & 0.68 \\
+EfficientNet-B0 + PCA-64 (pre-decl.) & 0.50 & 0.92 & 0.63 & 1.00 & 0.70 & 0.66 & 0.68 & 0.82 & 0.80 & 0.44 & 0.68 & 0.66 \\
+EfficientNet-B0 + PCA-16 & 0.92 & 0.67 & 0.81 & 1.00 & 0.92 & 0.62 & 0.80 & 0.83 & 0.92 & 0.58 & 0.79 & 0.67 \\
+Engineered, attention MIL & 1.00 & 0.00 & 0.67 & 0.00 & 1.00 & 0.00 & 0.67 & 0.00 & 1.00 & 0.00 & 0.67 & 0.00 \\
+Fine-tuned EfficientNet-B0 & 0.83 & 0.67 & 0.77 & 1.00 & 0.85 & 0.63 & 0.76 & 0.84 & 0.86 & 0.59 & 0.76 & 0.67 \\
+\bottomrule
+\end{tabular}}
+\end{table*}

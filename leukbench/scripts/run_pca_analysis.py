@@ -29,13 +29,19 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--manifest", required=True)
 ap.add_argument("--effnet", required=True)
 ap.add_argument("--ks", nargs="+", type=int, default=[4, 8, 16, 32, 64, 128, 256])
+ap.add_argument("--positive", default="APL")
+ap.add_argument("--negative", default="AML", help="class used for the cohort-identification test")
+ap.add_argument("--cohort-col", default="cohort")
+ap.add_argument("--dev", default="Discovery")
+ap.add_argument("--ext", default="Validation")
 ap.add_argument("--out", required=True)
 a = ap.parse_args()
 out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
 
 man = pd.read_csv(a.manifest, keep_default_na=False)
 E = np.nan_to_num(load_feature_block(a.effnet), nan=0.0)
-disc = (man.cohort == "Discovery").values
+man["cohort"] = man[a.cohort_col]
+disc = (man.cohort == a.dev).values
 sc = StandardScaler().fit(E[disc])
 Z = sc.transform(E)
 pca = PCA(max(a.ks), random_state=0).fit(Z[disc])
@@ -43,13 +49,13 @@ cumvar = np.cumsum(pca.explained_variance_ratio_)
 Zp = pca.transform(Z)
 
 rng = np.random.default_rng(0)
-aml = np.flatnonzero((man.diagnosis == "AML").values)
+aml = np.flatnonzero((man.diagnosis == a.negative).values)
 aml = np.sort(rng.choice(aml, min(6000, len(aml)), replace=False))
-yc = (man.cohort.values[aml] == "Validation").astype(int)
+yc = (man.cohort.values[aml] == a.ext).astype(int)
 g = man.patient_id.values[aml]
-tr = np.flatnonzero(disc); te = np.flatnonzero(~disc)
+tr = np.flatnonzero(disc); te = np.flatnonzero((man.cohort == a.ext).values)
 tr = np.sort(rng.choice(tr, min(8000, len(tr)), replace=False))
-y = (man.diagnosis == "APL").astype(int).values
+y = (man.diagnosis == a.positive).astype(int).values
 clf = lambda: Pipeline([("s", StandardScaler()), ("c", LogisticRegression(C=0.1, max_iter=4000, class_weight="balanced"))])
 
 rows = []
@@ -62,7 +68,7 @@ for k in a.ks + [0]:
     dim = E.shape[1] if k == 0 else k
     rows.append(dict(k=dim, label="raw" if k == 0 else f"PCA-{k}", explained_var=1.0 if k == 0 else float(cumvar[k - 1]),
                      cohort_id_auroc=cid, cell_apl_auroc_external=cell_auc, patient_model_inputs=5 * dim,
-                     inputs_per_training_patient=5 * dim / 65.6))
+                     inputs_per_training_patient=5 * dim / (0.8 * man[disc].patient_id.nunique())))
     print(f"  {rows[-1]['label']:8s} var {rows[-1]['explained_var']:.2f}  cohort-ID AUROC {cid:.3f}  cell APL AUROC (ext) {cell_auc:.3f}  "
           f"patient-model inputs {5 * dim}", flush=True)
 pd.DataFrame(rows).to_csv(out / "pca_analysis.csv", index=False)
