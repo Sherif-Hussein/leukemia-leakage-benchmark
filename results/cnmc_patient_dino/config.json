@@ -1,0 +1,34 @@
+{
+  "manifest": "manifests/cnmc.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "task": "cnmc_patient",
+  "features": [
+    "hand=features/cnmc_hand.parquet",
+    "dino=features/cnmc_dinobloom_s.npy"
+  ],
+  "models": [
+    "PD=dino:pool_lr",
+    "PDF=hand+dino:pool_lr",
+    "PDM=dino:abmil"
+  ],
+  "folds": 5,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "cv_where": [
+    "split_role=Development"
+  ],
+  "test_where": [
+    "split_role=External"
+  ],
+  "max_cells": 500,
+  "epochs": 40,
+  "max_epochs": 40,
+  "threshold": "sens95",
+  "ext_sens": 0.95,
+  "n_boot": 2000,
+  "threads": 1,
+  "out": "results/cnmc_patient_dino"
+}

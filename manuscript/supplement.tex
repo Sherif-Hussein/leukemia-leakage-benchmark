@@ -18,7 +18,7 @@
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \begin{document}
-\title{Supplementary Material for ``Leakage, Shift and the Operating Point: A Two-Dataset Evaluation of Blood-Smear Leukemia Classifiers''}
+\title{Supplementary Material for ``Leakage, Shift and the Operating Point: Evaluating Blood-Smear Leukemia Classifiers Across Time and Laboratories''}
 \author{First~Author and Second~Author}
 \maketitle
 \noindent This document contains the complete settings, computing environment, dataset details, full parameter sweeps, secondary analyses and the TRIPOD+AI checklist referred to in the main text. Code, split files, the pre-specification and per-model outputs are released with the paper.
@@ -121,7 +121,13 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \end{figure}
 \input{tables/tab_bagsize}
 
-\section*{S7. Ablation of engineered feature groups}
+\section*{S7. Ablation and explanation of engineered features}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_shap.pdf}
+\caption{SHAP explanation of the engineered-feature LightGBM cell classifier on C-NMC (trained on development cells, explained on the 3,553 external cells). (a) Fifteen most influential features (mean absolute SHAP value, log-odds); red: higher values push towards ALL, blue: towards normal. (b) Total contribution of each feature group.}
+\label{fig:shap}
+\end{figure}
 \input{tables/tab_ablation}
 \begin{figure}[!htbp]
 \centering

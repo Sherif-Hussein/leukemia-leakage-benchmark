@@ -250,7 +250,7 @@ for split in a.splits:
     print(f"== {split}: CV AUROC {cvm['auroc']:.3f} | external AUROC {tm['auroc']:.3f} [{r['auroc_lo']:.3f}, {r['auroc_hi']:.3f}] "
           f"recall {tm['sens']:.3f} spec {tm['spec']:.3f} F1 {tm['f1']:.3f}", flush=True)
     # patient level (T1 -> T3): mean cell probability per patient
-    if a.task in ("apl_cell_diagnosis", "cnmc_all_vs_hem") and split == "grouped":
+    if a.task in ("apl_cell_diagnosis", "apl_cell_diagnosis_mll", "cnmc_all_vs_hem") and split == "grouped":
         P = lambda gg, pp, yy: pd.DataFrame({"g": gg, "p": pp, "y": yy}).groupby("g").agg(p=("p", "mean"), y=("y", "first"))
         pc, pt = P(g_cv, oof, y_cv), P(g_te, pe, y_te)
         thr_p = MT.threshold_for_sensitivity(pc.y.values, pc.p.values, 0.95)

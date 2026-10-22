@@ -1,168 +1,202 @@
 {
- "cnmc_all_vs_hem": {
-  "level": "cell",
-  "label_col": "cell_type",
-  "positive": [
-   "all"
-  ],
-  "negative": [
-   "hem"
-  ],
-  "where": {
-   "dataset": [
-    "cnmc"
-   ]
+  "cnmc_all_vs_hem": {
+    "level": "cell",
+    "label_col": "cell_type",
+    "positive": [
+      "all"
+    ],
+    "negative": [
+      "hem"
+    ],
+    "where": {
+      "dataset": [
+        "cnmc"
+      ]
+    }
+  },
+  "apl_cell_blast": {
+    "level": "cell",
+    "label_col": "cell_type",
+    "positive": [
+      "Blast, no lineage spec"
+    ],
+    "negative": "*rest*",
+    "exclude": [
+      "unlabelled",
+      "Arifact",
+      "Unidentified",
+      "Young Unidentified",
+      "Thrombocyte aggregation",
+      "Giant thrombocyte",
+      "Smudge cells"
+    ],
+    "where": {
+      "dataset": [
+        "apl_aml"
+      ]
+    }
+  },
+  "apl_cell_diagnosis": {
+    "_comment": "Patient diagnosis copied onto every cell - the setting in which image-level splits leak most.",
+    "level": "cell",
+    "label_col": "diagnosis",
+    "positive": [
+      "APL"
+    ],
+    "negative": [
+      "AML"
+    ],
+    "exclude": [],
+    "where": {
+      "dataset": [
+        "apl_aml"
+      ]
+    }
+  },
+  "apl_patient": {
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "APL"
+    ],
+    "negative": [
+      "AML"
+    ],
+    "where": {
+      "dataset": [
+        "apl_aml"
+      ]
+    }
+  },
+  "blast_crosslab": {
+    "_comment": "Blast vs non-blast across sources. LMU: MYO/MOB; BMC: BLA; C-NMC: all; APL-AML: 'Blast, no lineage spec'. Check class codes after download.",
+    "level": "cell",
+    "label_col": "cell_type",
+    "positive": [
+      "MYO",
+      "MOB",
+      "BLA",
+      "all",
+      "Blast, no lineage spec"
+    ],
+    "negative": "*rest*",
+    "exclude": [
+      "unlabelled",
+      "ART",
+      "NIF",
+      "OTH",
+      "KSC",
+      "Arifact",
+      "Unidentified",
+      "Young Unidentified",
+      "Thrombocyte aggregation",
+      "Giant thrombocyte",
+      "Smudge cells"
+    ]
+  },
+  "hehr_aml_vs_control": {
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "PML_RARA",
+      "NPM1",
+      "CBFB_MYH11",
+      "RUNX1_RUNX1T1"
+    ],
+    "negative": [
+      "control"
+    ],
+    "where": {
+      "dataset": [
+        "hehr"
+      ]
+    }
+  },
+  "hehr_apl_vs_other_aml": {
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "PML_RARA"
+    ],
+    "negative": [
+      "NPM1",
+      "CBFB_MYH11",
+      "RUNX1_RUNX1T1"
+    ],
+    "where": {
+      "dataset": [
+        "hehr"
+      ]
+    }
+  },
+  "apl_vs_other_aml_crosslab": {
+    "_comment": "Train on hehr, test on apl_aml (use --cv-where dataset=hehr --test-where dataset=apl_aml).",
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "PML_RARA",
+      "APL"
+    ],
+    "negative": [
+      "NPM1",
+      "CBFB_MYH11",
+      "RUNX1_RUNX1T1",
+      "AML"
+    ],
+    "where": {
+      "dataset": [
+        "hehr",
+        "apl_aml"
+      ]
+    }
+  },
+  "cnmc_patient": {
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "ALL"
+    ],
+    "negative": [
+      "HEM"
+    ],
+    "where": {
+      "dataset": [
+        "cnmc"
+      ]
+    }
+  },
+  "apl_patient_mll": {
+    "level": "patient",
+    "label_col": "diagnosis",
+    "positive": [
+      "APL"
+    ],
+    "negative": [
+      "AML"
+    ],
+    "where": {
+      "dataset": [
+        "apl_aml",
+        "mll"
+      ]
+    }
+  },
+  "apl_cell_diagnosis_mll": {
+    "_comment": "Patient diagnosis copied onto every cell - the setting in which image-level splits leak most.",
+    "level": "cell",
+    "label_col": "diagnosis",
+    "positive": [
+      "APL"
+    ],
+    "negative": [
+      "AML"
+    ],
+    "exclude": [],
+    "where": {
+      "dataset": [
+        "apl_aml",
+        "mll"
+      ]
+    }
   }
- },
- "apl_cell_blast": {
-  "level": "cell",
-  "label_col": "cell_type",
-  "positive": [
-   "Blast, no lineage spec"
-  ],
-  "negative": "*rest*",
-  "exclude": [
-   "unlabelled",
-   "Arifact",
-   "Unidentified",
-   "Young Unidentified",
-   "Thrombocyte aggregation",
-   "Giant thrombocyte",
-   "Smudge cells"
-  ],
-  "where": {
-   "dataset": [
-    "apl_aml"
-   ]
-  }
- },
- "apl_cell_diagnosis": {
-  "_comment": "Patient diagnosis copied onto every cell - the setting in which image-level splits leak most.",
-  "level": "cell",
-  "label_col": "diagnosis",
-  "positive": [
-   "APL"
-  ],
-  "negative": [
-   "AML"
-  ],
-  "exclude": [],
-  "where": {
-   "dataset": [
-    "apl_aml"
-   ]
-  }
- },
- "apl_patient": {
-  "level": "patient",
-  "label_col": "diagnosis",
-  "positive": [
-   "APL"
-  ],
-  "negative": [
-   "AML"
-  ],
-  "where": {
-   "dataset": [
-    "apl_aml"
-   ]
-  }
- },
- "blast_crosslab": {
-  "_comment": "Blast vs non-blast across sources. LMU: MYO/MOB; BMC: BLA; C-NMC: all; APL-AML: 'Blast, no lineage spec'. Check class codes after download.",
-  "level": "cell",
-  "label_col": "cell_type",
-  "positive": [
-   "MYO",
-   "MOB",
-   "BLA",
-   "all",
-   "Blast, no lineage spec"
-  ],
-  "negative": "*rest*",
-  "exclude": [
-   "unlabelled",
-   "ART",
-   "NIF",
-   "OTH",
-   "KSC",
-   "Arifact",
-   "Unidentified",
-   "Young Unidentified",
-   "Thrombocyte aggregation",
-   "Giant thrombocyte",
-   "Smudge cells"
-  ]
- },
- "hehr_aml_vs_control": {
-  "level": "patient",
-  "label_col": "diagnosis",
-  "positive": [
-   "PML_RARA",
-   "NPM1",
-   "CBFB_MYH11",
-   "RUNX1_RUNX1T1"
-  ],
-  "negative": [
-   "control"
-  ],
-  "where": {
-   "dataset": [
-    "hehr"
-   ]
-  }
- },
- "hehr_apl_vs_other_aml": {
-  "level": "patient",
-  "label_col": "diagnosis",
-  "positive": [
-   "PML_RARA"
-  ],
-  "negative": [
-   "NPM1",
-   "CBFB_MYH11",
-   "RUNX1_RUNX1T1"
-  ],
-  "where": {
-   "dataset": [
-    "hehr"
-   ]
-  }
- },
- "apl_vs_other_aml_crosslab": {
-  "_comment": "Train on hehr, test on apl_aml (use --cv-where dataset=hehr --test-where dataset=apl_aml).",
-  "level": "patient",
-  "label_col": "diagnosis",
-  "positive": [
-   "PML_RARA",
-   "APL"
-  ],
-  "negative": [
-   "NPM1",
-   "CBFB_MYH11",
-   "RUNX1_RUNX1T1",
-   "AML"
-  ],
-  "where": {
-   "dataset": [
-    "hehr",
-    "apl_aml"
-   ]
-  }
- },
- "cnmc_patient": {
-  "level": "patient",
-  "label_col": "diagnosis",
-  "positive": [
-   "ALL"
-  ],
-  "negative": [
-   "HEM"
-  ],
-  "where": {
-   "dataset": [
-    "cnmc"
-   ]
-  }
- }
 }

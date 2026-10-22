@@ -26,13 +26,26 @@ ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cp
 ap.add_argument("--batch-size", type=int, default=64)
 ap.add_argument("--workers", type=int, default=2)
 ap.add_argument("--threads", type=int, default=0, help="torch CPU threads (0 = default)")
+ap.add_argument("--chunk", type=int, default=0, help="process the manifest in chunks of this many rows, each in a fresh process (avoids memory growth)")
 a = ap.parse_args()
 
 if a.threads:
     torch.set_num_threads(a.threads)
 paths = pd.read_csv(a.manifest)["path"].tolist()
 t0 = time.time()
-z = embed(build_encoder(a.encoder, a.weights), paths, a.device, a.batch_size, a.workers)
+if a.chunk:
+    import subprocess, sys as _s, tempfile, os
+    parts = []
+    for st in range(0, len(paths), a.chunk):
+        tmpm = tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False).name; tmpo = tmpm.replace(".csv", ".npy")
+        pd.DataFrame({"path": paths[st:st + a.chunk]}).to_csv(tmpm, index=False)
+        cmd = [_s.executable, "-I", __file__, "--manifest", tmpm, "--encoder", a.encoder, "--out", tmpo, "--device", a.device,
+               "--batch-size", str(a.batch_size), "--workers", str(a.workers), "--threads", str(a.threads)] + (["--weights", a.weights] if a.weights else [])
+        subprocess.run(cmd, check=True); parts.append(np.load(tmpo)); os.remove(tmpm); os.remove(tmpo)
+        print(f"  chunk done: {min(st + a.chunk, len(paths)):,}/{len(paths):,}", flush=True)
+    z = np.concatenate(parts)
+else:
+    z = embed(build_encoder(a.encoder, a.weights), paths, a.device, a.batch_size, a.workers)
 Path(a.out).parent.mkdir(parents=True, exist_ok=True)
 np.save(a.out, z)
 print(f"wrote {a.out}: {z.shape} in {(time.time() - t0) / 60:.1f} min on {a.device}")

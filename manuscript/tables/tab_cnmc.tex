@@ -9,6 +9,7 @@
 \multicolumn{10}{l}{\emph{(a) Cell level: every cell carries its subject's diagnosis (mean of 3 seeds)}} \\
 Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Leakage & Shift \\
 \midrule
+Engineered + LightGBM & & 0.972 & 0.876 & 0.839 [0.694, 0.921] & 0.91 & 0.61 & 0.88 & +0.096 & +0.037 \\
 Engineered + LR & & 0.933 & 0.864 & 0.840 [0.730, 0.902] & 0.95 & 0.58 & 0.89 & +0.069 & +0.023 \\
 EfficientNet-B0 + LR & & 0.912 & 0.834 & 0.775 [0.640, 0.859] & 0.96 & 0.43 & 0.87 & +0.079 & +0.059 \\
 Fusion + LR & & 0.939 & 0.864 & 0.817 [0.692, 0.892] & 0.95 & 0.54 & 0.88 & +0.075 & +0.047 \\

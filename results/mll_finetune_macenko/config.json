@@ -1,0 +1,29 @@
+{
+  "manifest": "manifests/apl_mll_macenko.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "weights": "weights/efficientnet_b0_ra-3dd342df.pth",
+  "cache_file": "features/apl_mll_effb0_block4_macenko.npy",
+  "cache": false,
+  "task": "apl_cell_diagnosis_mll",
+  "splits": [
+    "grouped"
+  ],
+  "seed": 0,
+  "epochs": 6,
+  "lr": 0.0003,
+  "batch_size": 128,
+  "max_train": 5000,
+  "cv_where": [
+    "cohort=Discovery"
+  ],
+  "test_where": [
+    "cohort=External_MLL"
+  ],
+  "n_boot": 2000,
+  "threads": 2,
+  "pool": "avg",
+  "crop": false,
+  "stage": 5,
+  "no_test": false,
+  "out": "results/mll_finetune_macenko"
+}

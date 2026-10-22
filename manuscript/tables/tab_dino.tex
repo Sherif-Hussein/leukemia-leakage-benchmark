@@ -1,0 +1,30 @@
+\begin{table}[!t]
+\centering
+\caption{Hematology foundation model (DinoBloom-S, frozen, CLS token) compared with ImageNet, fine-tuned and engineered features. Selection by development CV only (bold: highest development CV in each block). External: C-NMC fold 2 and the APL-AML Validation cohort; recall and specificity at the development threshold.}
+\label{tab:dino}
+\setlength{\tabcolsep}{2.4pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccc}
+\toprule
+Block & Features & Dev.\ CV & External [95\% CI] & Recall & Spec. & F1 \\
+\midrule
+C-NMC, cells & EfficientNet-B0 (ImageNet), frozen & 0.834 & 0.775 [0.640, 0.859] & 0.96 & 0.43 & 0.87 \\
+ & DinoBloom-S, frozen & 0.859 & 0.801 [0.661, 0.889] & 0.94 & 0.47 & 0.86 \\
+ & EfficientNet-B0, fine-tuned & 0.853 & 0.841 [0.715, 0.917] & 0.99 & 0.42 & 0.88 \\
+ & Engineered & 0.864 & 0.840 [0.730, 0.902] & 0.95 & 0.58 & 0.89 \\
+ & Engineered + LightGBM & 0.876 & 0.839 [0.694, 0.921] & 0.91 & 0.61 & 0.88 \\
+ & EfficientNet-B0 + engineered & 0.864 & 0.817 [0.692, 0.892] & 0.95 & 0.54 & 0.88 \\
+ & \textbf{DinoBloom-S + engineered} & 0.882 & 0.845 [0.724, 0.917] & 0.94 & 0.59 & 0.89 \\
+\midrule
+C-NMC, subjects & Engineered, pooled LR & 0.906 & 0.941 [0.840, 1.000] & 0.94 & 0.79 & 0.89 \\
+ & DinoBloom-S, pooled LR & 0.906 & 0.941 [0.849, 1.000] & 0.94 & 0.64 & 0.84 \\
+ & DinoBloom-S, attention MIL & 0.913 & 0.945 [0.853, 1.000] & 0.88 & 0.79 & 0.86 \\
+ & \textbf{DinoBloom-S + engineered, pooled LR} & 0.919 & 0.962 [0.891, 1.000] & 1.00 & 0.71 & 0.89 \\
+\midrule
+APL-AML, later cohort & Engineered, attention MIL & 0.827 & 0.812 [0.614, 0.963] & 1.00 & 0.00 & 0.67 \\
+ & DinoBloom-S, pooled LR & 0.880 & 0.840 [0.652, 0.979] & 0.83 & 0.67 & 0.77 \\
+ & \textbf{DinoBloom-S, attention MIL} & 0.924 & 0.868 [0.703, 0.993] & 0.50 & 0.92 & 0.63 \\
+ & DinoBloom-S + engineered, pooled LR & 0.869 & 0.833 [0.644, 0.979] & 0.92 & 0.58 & 0.79 \\
+\bottomrule
+\end{tabular}}
+\end{table}

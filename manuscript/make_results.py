@@ -1118,3 +1118,108 @@ if (RS / "cnmc_bag_size.csv").exists():
     L += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
     (TAB / "tab_bagsize.tex").write_text("\n".join(L))
 (TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))
+
+# ================================================================== REVISION 3: independent external test (MLL), DinoBloom, SHAP, improvement pilot
+from sklearn.metrics import roc_curve
+MLLR = R / "mll_patient"
+if (MLLR / "summary.csv").exists():
+    NP, NN = 24, 105
+    ms = pd.read_csv(MLLR / "summary.csv").query("eval == 'test'").set_index("model")
+    ens = pd.read_csv(R / "mll_ensemble" / "ensemble.csv").set_index("model").loc["Ensemble"]
+    ftm = pd.read_csv(R / "mll_finetune_macenko" / "summary.csv").query("level == 'patient'").iloc[0]
+    fem = pd.read_csv(R / "mll_fe_macenko" / "feature_engineering.csv").set_index("config").loc["eff_pca64_nw"]
+    rows = [("\\textbf{Primary pipeline (pre-specified ensemble)}", ens.ext_auroc, ens.lo, ens.hi, ens.sens, ens.fn, ens.spec, ens.f1, ens.npv, ens.acc)]
+    for m, lab in [("P1", "Member: engineered, pooled LR"), ("P4", "Member: engineered, attention MIL")]:
+        r = ms.loc[m]; rows.append((lab, r.auroc, r.auroc_lo, r.auroc_hi, r.sens, r.fn, r.spec, r.f1, r.npv, r.acc))
+    rows.append(("Member: Macenko + fine-tuned CNN", ftm.ext_auroc, ftm.ext_lo, ftm.ext_hi, ftm.ext_sens, ftm.ext_fn, ftm.ext_spec, ftm.ext_f1, ftm.ext_npv, ftm.ext_acc))
+    rows.append(("Secondary pipeline (Macenko + frozen CNN + PCA-64)", fem.ext_auroc, fem.ext_lo, fem.ext_hi, fem.sens95_sens, fem.sens95_fn, fem.sens95_spec, fem.sens95_f1, fem.sens95_npv, fem.sens95_acc))
+    for m, lab in [("PD", "DinoBloom-S, pooled LR"), ("PDF", "DinoBloom-S + engineered, pooled LR")]:
+        r = ms.loc[m]; rows.append((lab, r.auroc, r.auroc_lo, r.auroc_hi, r.sens, r.fn, r.spec, r.f1, r.npv, r.acc))
+    MT_ = pd.DataFrame(rows, columns=["model", "auroc", "lo", "hi", "sens", "fn", "spec", "f1", "npv", "acc"]); MT_.to_csv(TAB / "mll_external.csv", index=False)
+    facts["mll_external"] = MT_.round(4).to_dict("records")
+    shm = pd.read_csv(R / "mll_external" / "shift_test.csv"); facts["mll_shift"] = shm.round(4).to_dict("records")
+    L = [r"\begin{table*}[!t]", r"\centering",
+         r"\caption{Independent external test (pre-registered): models trained on the APL-AML Discovery cohort only and applied once to the AML-Cytomorphology\_MLL\_Helmholtz cohort (another laboratory, country, scanner and stain; 24 APL and 105 other AML patients, up to 200 cells each). Label-free shift test: AUROC " + f"{shm.cohort_auroc.iloc[0]:.3f}" + r" for telling MLL from Discovery AML cells by stain and color ($p\leq0.03$), so Macenko normalization was applied to the CNN branch. Threshold metrics at the Discovery operating point (recall $\geq$0.95), with exact 95\% CIs; NPV n/a: no patient called negative.}",
+         r"\label{tab:mll}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lcccccc}", r"\toprule",
+         r"Model & AUROC [95\% CI] & Recall (95\% CI) [missed of 24] & Specificity (95\% CI) & F1 & NPV & Accuracy \\", r"\midrule"]
+    for r in MT_.itertuples():
+        L.append(f"{r.model} & {ci(r.auroc, r.lo, r.hi)} & {cpr(r.sens, NP)} [{int(r.fn)}] & {cpr(r.spec, NN)} & {r.f1:.2f} & {npv_s(r.npv, r.fn, r.spec)} & {r.acc:.2f} \\\\")
+        if r.model.startswith("Secondary"):
+            L.append(r"\midrule \multicolumn{7}{l}{\emph{Hematology foundation model (added in this revision, selected on C-NMC development data)}} \\")
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
+    (TAB / "tab_mll.tex").write_text("\n".join(L))
+    # figure: ROC curves + local recalibration on the independent cohort
+    pp_ = pd.read_csv(MLLR / "predictions.csv")
+    curves = {"Primary (ensemble)": pd.read_csv(R / "mll_ensemble" / "ensemble_test.csv")}
+    for m, lab in [("PDF", "DinoBloom + engineered"), ("P1", "Engineered, pooled LR")]:
+        curves[lab] = pp_[(pp_.model == m) & (pp_["eval"] == "test")].groupby("patient_id").agg(y=("y", "first"), p=("p", "mean")).reset_index()
+    curves["Fine-tuned CNN"] = pd.read_csv(R / "mll_finetune_macenko" / "patient_predictions_test.csv")
+    rc_ = pd.read_csv(R / "mll_recal" / "mll_recal.csv") if (R / "mll_recal" / "mll_recal.csv").exists() else None
+    fig, ax = plt.subplots(1, 2, figsize=(7.16, 2.8))
+    cols = {"Primary (ensemble)": RED, "DinoBloom + engineered": GREEN, "Engineered, pooled LR": BLUE, "Fine-tuned CNN": GREY}
+    from sklearn.metrics import roc_auc_score as _auc
+    for lab, d in curves.items():
+        fpr, tpr, _ = roc_curve(d.y, d.p); ax[0].plot(fpr, tpr, color=cols[lab], lw=1.5 if lab.startswith("Primary") else 1.0, label=f"{lab} ({_auc(d.y, d.p):.2f})")
+    ax[0].plot([0, 1], [0, 1], ":", color="#999", lw=0.8); ax[0].set_xlabel("1 - specificity"); ax[0].set_ylabel("Recall")
+    ax[0].set_title("(a) Independent cohort: 24 APL, 105 AML", loc="left", fontsize=8); ax[0].legend(frameon=False, fontsize=6, loc="lower right")
+    if rc_ is not None:
+        for nm, c in [("Primary pipeline (ensemble)", RED), ("DinoBloom + engineered, pooled LR", GREEN), ("Macenko + fine-tuned CNN", GREY)]:
+            q = rc_[(rc_.model == nm) & (rc_.m > 0)]
+            ax[1].plot(q.m, q.sens, "o-", color=c, ms=3, lw=1.1); ax[1].plot(q.m, q.spec, "s--", color=c, ms=2.5, lw=0.8)
+        q = rc_[(rc_.model == "Primary pipeline (ensemble)") & (rc_.m > 0)]
+        ax[1].plot(q.m, q.m / (q.m + 1), color="black", lw=0.7, ls=":", label="$m/(m+1)$")
+        ax[1].set_xlabel("Confirmed local APL cases $m$"); ax[1].set_ylabel("Recall (solid) / specificity (dashed)"); ax[1].set_ylim(0, 1.02)
+        ax[1].set_title("(b) Threshold from local APL cases", loc="left", fontsize=8); ax[1].legend(frameon=False, fontsize=6, loc="lower right")
+        facts["mll_recal"] = rc_.round(4).to_dict("records")
+    fig.tight_layout(); fig.savefig(OUT / "figures" / "fig_mll.pdf"); fig.savefig(OUT / "figures" / "fig_mll.png", dpi=200); plt.close(fig)
+    print(MT_.round(3).to_string())
+
+# DinoBloom across the three cohorts (development CV and external), compared with the best previous model of each block
+if (R / "cnmc_cell_dino" / "summary.csv").exists():
+    D = []
+    def cellrow(folder, model, lab):
+        s = pd.read_csv(R / folder / "summary.csv"); s = s[(s.model == model) & (s.split == "grouped")]
+        cv, ex = s[s["eval"] == "cv"], s[s["eval"] == "test"]
+        return dict(block="C-NMC, cells", model=lab, cv=cv.auroc.mean(), ext=ex.auroc.mean(), lo=ex.auroc_lo.mean(), hi=ex.auroc_hi.mean(), sens=ex.sens.mean(), spec=ex.spec.mean(), f1=ex.f1.mean())
+    for f, m, lab in [("cnmc_cell", "M2", "EfficientNet-B0 (ImageNet), frozen"), ("cnmc_cell_dino", "MD", "DinoBloom-S, frozen"), ("cnmc_cell", "M1lr", "Engineered"),
+                      ("cnmc_cell_lgbm", "M1", "Engineered + LightGBM"), ("cnmc_cell", "M4", "EfficientNet-B0 + engineered"), ("cnmc_cell_dino", "MDF", "DinoBloom-S + engineered")]:
+        if (R / f / "summary.csv").exists():
+            D.append(cellrow(f, m, lab))
+    ftc = pd.read_csv(R / "finetune_cnmc" / "summary.csv").query("level == 'cell'").iloc[0]
+    D.insert(2, dict(block="C-NMC, cells", model="EfficientNet-B0, fine-tuned", cv=ftc.cv_auroc, ext=ftc.ext_auroc, lo=ftc.ext_lo, hi=ftc.ext_hi, sens=ftc.ext_sens, spec=ftc.ext_spec, f1=ftc.ext_f1))
+    def patrow(folder, model, lab, block):
+        s = pd.read_csv(R / folder / "summary.csv"); cv = s[(s.model == model) & (s["eval"] == "cv")].auroc.mean(); ex = s[(s.model == model) & (s["eval"] == "test")].iloc[0]
+        return dict(block=block, model=lab, cv=cv, ext=ex.auroc, lo=ex.auroc_lo, hi=ex.auroc_hi, sens=ex.sens, spec=ex.spec, f1=ex.f1)
+    for f, m, lab in [("cnmc_patient", "P1", "Engineered, pooled LR"), ("cnmc_patient_dino", "PD", "DinoBloom-S, pooled LR"), ("cnmc_patient_dino", "PDM", "DinoBloom-S, attention MIL"), ("cnmc_patient_dino", "PDF", "DinoBloom-S + engineered, pooled LR")]:
+        D.append(patrow(f, m, lab, "C-NMC, subjects"))
+    for f, m, lab in [("v2_patient", "P4", "Engineered, attention MIL"), ("apl_patient_dino", "PD", "DinoBloom-S, pooled LR"), ("apl_patient_dino", "PDM", "DinoBloom-S, attention MIL"), ("apl_patient_dino", "PDF", "DinoBloom-S + engineered, pooled LR")]:
+        if (R / f / "summary.csv").exists():
+            D.append(patrow(f, m, lab, "APL-AML, later cohort"))
+    D = pd.DataFrame(D); D.to_csv(TAB / "dinobloom.csv", index=False); facts["dinobloom"] = D.round(4).to_dict("records")
+    L = [r"\begin{table}[!t]", r"\centering",
+         r"\caption{Hematology foundation model (DinoBloom-S, frozen, CLS token) compared with ImageNet, fine-tuned and engineered features. Selection by development CV only (bold: highest development CV in each block). External: C-NMC fold 2 and the APL-AML Validation cohort; recall and specificity at the development threshold.}",
+         r"\label{tab:dino}", r"\setlength{\tabcolsep}{2.4pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llccccc}", r"\toprule",
+         r"Block & Features & Dev.\ CV & External [95\% CI] & Recall & Spec. & F1 \\", r"\midrule"]
+    for b, g in D.groupby("block", sort=False):
+        best = g.cv.max()
+        for i, r in enumerate(g.itertuples()):
+            nm = r"\textbf{" + r.model + "}" if r.cv == best else r.model
+            L.append(f"{b if i == 0 else ''} & {nm} & {r.cv:.3f} & {ci(r.ext, r.lo, r.hi)} & {r.sens:.2f} & {r.spec:.2f} & {r.f1:.2f} \\\\")
+        L.append(r"\midrule")
+    L[-1] = r"\bottomrule"
+    L += [r"\end{tabular}}", r"\end{table}"]
+    (TAB / "tab_dino.tex").write_text("\n".join(L)); print(D.round(3).to_string())
+
+# improvement pilot on C-NMC (development CV only) and SHAP
+pil = []
+for d, lab in [("finetune_cnmc", "Fine-tuned EfficientNet-B0 (reference)"), ("pilot_cnmc_crop", "+ crop to the cell")]:
+    f = R / d / "summary.csv"
+    if f.exists():
+        q = pd.read_csv(f).query("level == 'cell'").iloc[0]
+        pil.append(dict(variant=lab, cv=q.cv_auroc, subj=q.get("patient_cv_auroc", np.nan)))
+if pil:
+    pl = pd.DataFrame(pil); pl.to_csv(TAB / "pilot_cnmc.csv", index=False); facts["pilot_cnmc"] = pl.round(4).to_dict("records")
+if (R / "shap_cnmc" / "fig_shap.pdf").exists():
+    shutil.copy(R / "shap_cnmc" / "fig_shap.pdf", OUT / "figures" / "fig_shap.pdf"); shutil.copy(R / "shap_cnmc" / "fig_shap.png", OUT / "figures" / "fig_shap.png")
+    facts["shap_cnmc_groups"] = pd.read_csv(R / "shap_cnmc" / "shap_groups.csv").round(4).to_dict("records")
+(TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))

@@ -177,3 +177,11 @@ LEUKBENCH_WORK=$W python ../manuscript/make_results.py   # tables, figures, fact
 | `gap_bootstrap` | `scripts/run_gap_bootstrap.py --boot 500` | patient-level bootstrap CIs of the leakage and shift components |
 | `v2_patient_macenko_eng`, `ensemble_apl_all_macenko` | `run_patient_benchmark.py` on Macenko engineered features; `run_ensemble.py` | sensitivity: primary pipeline with engineered features on normalized images |
 | `ensemble_apl` | `run_ensemble.py --patient results/v2_patient --finetune results/finetune_t1` | sensitivity: primary pipeline without Macenko normalization |
+
+## Revision 3: foundation model and independent external test
+
+| Result folder | Script | What it does |
+|---|---|---|
+| `cnmc_cell_dino`, `cnmc_patient_dino`, `apl_patient_dino` | `extract_embeddings.py --encoder dinobloom_s --chunk 7000`; `run_cell_benchmark.py`; `run_patient_benchmark.py` | DinoBloom-S (Zenodo 10908163, CLS token, original images) alone and with engineered features |
+| `cnmc_cell_lgbm`, `pilot_cnmc_crop`, `shap_cnmc` | `run_cell_benchmark.py`; `run_finetune_cached.py --crop --no-test`; `run_shap.py` | C-NMC improvement pilot (development CV only) and SHAP explanation |
+| `mll_external`, `mll_patient`, `mll_finetune_macenko`, `mll_ensemble`, `mll_fe_macenko`, `mll_recal` | see `docs/PRESPEC_EXTERNAL_MLL.md`; `run_local_recal_ext.py` | pre-registered independent test on AML-Cytomorphology_MLL_Helmholtz (24 APL, 105 AML), local recalibration |

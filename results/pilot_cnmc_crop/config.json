@@ -1,0 +1,29 @@
+{
+  "manifest": "manifests/cnmc.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "weights": "weights/efficientnet_b0_ra-3dd342df.pth",
+  "cache_file": "features/cnmc_crop_s5.npy",
+  "cache": false,
+  "task": "cnmc_all_vs_hem",
+  "splits": [
+    "grouped"
+  ],
+  "seed": 0,
+  "epochs": 6,
+  "lr": 0.0003,
+  "batch_size": 128,
+  "max_train": 0,
+  "cv_where": [
+    "split_role=Development"
+  ],
+  "test_where": [
+    "split_role=External"
+  ],
+  "n_boot": 2000,
+  "threads": 2,
+  "pool": "avg",
+  "crop": false,
+  "stage": 5,
+  "no_test": true,
+  "out": "results/pilot_cnmc_crop"
+}
