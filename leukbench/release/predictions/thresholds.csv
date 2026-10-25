@@ -1,0 +1,10 @@
+cohort,model,development_threshold
+mll,primary_ensemble,0.32317073070731706
+mll,dinobloom_engineered,0.12639869702099862
+mll,engineered_pooled_lr,0.05122542655559084
+mll,finetuned_cnn,0.1201343334853677
+apl_validation,primary_ensemble,0.32317073070731706
+apl_validation,dinobloom_attention_mil,0.3909455733720533
+cnmc_fold2,primary_ensemble,0.37698412598412695
+cnmc_fold2,dinobloom_engineered,0.8046936184101969
+apl_all_reverse,dinobloom_engineered_trained_on_mll,0.054481994650955136

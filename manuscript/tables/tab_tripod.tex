@@ -12,7 +12,7 @@ Item & Topic & Where reported \\
 2 & Abstract & M, abstract \\
 3 & Background, rationale, existing models & M, Introduction; Related Work; Table I \\
 4 & Objectives & M, contributions C1--C5 \\
-5 & Data sources, study dates & M, Datasets (APL-AML 2010--2020, split January 2019; C-NMC 2019 folds; MLL cohort 2009--2020, pre-registered) \\
+5 & Data sources, study dates & M, Datasets (APL-AML 2010--2020, split January 2019; C-NMC 2019 folds; MLL cohort 2009--2020, prespecified evaluation) \\
 6 & Setting, eligibility, treatments & M, Datasets; all patients of both public datasets were used \\
 7 & Data preparation, quality checks & M, Preprocessing; 10 unreadable files kept as missing; Fig.~S\ref{fig:seg} \\
 8 & Outcome definition and blinding & M, Learning Tasks; diagnoses from the dataset providers; no new labels were created \\
@@ -26,12 +26,12 @@ Item & Topic & Where reported \\
 16 & Training vs.\ evaluation data differences & M, Exploratory Analysis; shift test (Table~\ref{tab:shift}); scan-time confounding \\
 17 & Ethics & Public de-identified data; no new data collected \\
 18 & Funding, conflicts & To be completed by the authors \\
-19 & Protocol, registration & Pre-specification committed to the code repository (commit f47f3ec); no registry \\
+19 & Protocol, registration & Analysis plans committed to the code repository before scoring (commits f47f3ec, acf173b); no formal registry \\
 20 & Data and code availability & M, Data and Code Availability \\
 21 & Patient and public involvement & None \\
 22 & Participants: flow, characteristics & M, Table II; Table~\ref{tab:dataset_cnmc}; Fig.~S\ref{fig:dataset} \\
 23 & Model performance with uncertainty (discrimination, calibration, clinical utility) & M, Results; patient bootstrap CIs; calibration (Table~\ref{tab:calibration}); decision curves \\
-24 & Model updating / recalibration & M, Local Recalibration \\
+24 & Model updating / recalibration & M, Local Threshold Adaptation \\
 25 & Interpretation, limitations & M, Discussion \\
 26 & Usability, intended use & M, Pipelines (prioritization for urgent review, not rule-out) \\
 27 & Next steps & M, Discussion and Conclusion \\

@@ -59,7 +59,7 @@ This document describes every setting used to produce the results in the manuscr
 | Encoder | EfficientNet-B0, ImageNet weights (`timm`), frozen, global-average-pooled 1,280-d |
 | Input | bicubic resize to 224 × 224, ImageNet mean/std normalization, no augmentation |
 | Extraction | batch size 64, 2 workers, CPU, `torch.no_grad()`; 51.2 min for 25,724 cells |
-| DinoBloom | loader implemented (teacher weights, `backbone.` prefix stripped, 257-token positional embedding); not evaluated because its weights were unreachable |
+| DinoBloom | DinoBloom-S (Zenodo 10908163), timm `vit_small_patch14_dinov2`, img_size 224, CLS token (384-d), frozen, original colours. Not available in the first analysis (20 Oct 2026; weights unreachable); evaluated from 21 Oct 2026, see "Revision 3" below |
 
 ## 6. Feature engineering (`scripts/run_feature_engineering.py`, class `CellTransform`)
 

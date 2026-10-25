@@ -1,74 +1,76 @@
-# Leakage-Aware, Sensitivity-First Evaluation of Leukemia Detection in Blood Smears
+# Leakage, Shift and the Operating Point: Evaluating Blood-Smear Leukemia Classifiers Across Time and Laboratories
 
-Code, results and manuscript for the study *"Beyond 100% Accuracy: Leakage-Aware, Sensitivity-First
-Evaluation of Engineered and Deep Features for Leukemia Detection in Blood Smears"* (IEEE Transactions
-format, in preparation).
+Code, configurations, result files, release files and LaTeX sources for the manuscript of the same title
+(IEEE Transactions format, under review). The study separates three questions for blood-smear leukemia
+classifiers: **discrimination** (how well patients are ranked), **fixed-threshold performance** (what a threshold
+chosen on development data does on new patients) and **review workload** (how many patients must be reviewed to
+reach a sensitivity target).
 
-The study uses the public APL-AML cohort (106 patients with AML, 34 with APL; 25,724 single-cell images)
-released by Sidhom et al., *npj Precision Oncology* 5:38 (2021), and asks how much of the reported
-performance of blood-smear classifiers survives patient-level, temporally separated evaluation.
+> **Which version matches the paper?** The submitted manuscript corresponds to the commit named in the submission
+> and listed in [`PROVENANCE.md`](PROVENANCE.md), which also gives the full history of the study: what was added when,
+> and what each test set had been exposed to at that time. Earlier versions of this README and of
+> `leukbench/docs/SETTINGS.md` described the first analysis (20 October 2026), before DinoBloom could be downloaded
+> and before the Validation cohort's reuse was documented; those statements are superseded (see "Data use" below).
+
+## Data (not redistributed)
+
+| Cohort | Role | Source |
+| --- | --- | --- |
+| APL-AML (106 patients; 34 APL) | Development (Discovery, 82) and later temporal cohort (Validation, 24) | Sidhom et al. 2021, <https://github.com/sidhomj/DeepAPL> |
+| C-NMC 2019 (73 subjects) | Replication: folds 0-1 development, fold 2 external | TCIA, doi:10.7937/tcia.2019.dc64i46r |
+| AML-Cytomorphology_MLL_Helmholtz (24 APL, 105 other AML used) | Independent external test (prespecified, scored once) | Hehr et al. 2023; TCIA (CC BY 4.0) |
+| DinoBloom-S weights | Hematology foundation model | Koch et al. 2024; Zenodo record 10908163 |
+
+## Data use: what each test set was used for (honest statement)
+
+* **No external cohort was used to fit a model, a threshold or a probability calibration.**
+* **APL-AML Validation cohort: reused test set (exploratory).** It was evaluated for many configurations in the
+  first analysis and the revisions, and a preprocessing pilot subset included its patients. Earlier documentation
+  stated it was "never used for selection"; that statement was too strong and is withdrawn.
+* **C-NMC fold 2: secondary.** Evaluated for several configurations, never used for selection.
+* **MLL cohort: confirmatory.** The analysis plan (`leukbench/docs/PRESPEC_EXTERNAL_MLL.md`, commit `acf173b`) was
+  committed before any MLL image was scored. Workload, split-sample threshold adaptation and reverse transfer on
+  this cohort were added afterwards at reviewers' request (post hoc; no model changed).
+* **DinoBloom** was not evaluated in the first analysis because its weights could not be downloaded in the computing
+  environment; it was evaluated from 21 October 2026 (commits `acf173b`, `7fce3d4`) once access was enabled.
+
+A per-analysis registry is in the supplement (Table "Analysis registry") and in `PROVENANCE.md`.
+
+## Check the headline numbers in seconds (no images needed)
+
+```bash
+pip install numpy pandas scikit-learn scipy
+python verify_claims.py          # recomputes the main external results from leukbench/release/predictions
+```
+
+## Reproduce everything
+
+```bash
+git clone https://github.com/sidhomj/DeepAPL            # APL-AML images
+pip install -r leukbench/requirements.txt
+bash reproduce.sh                                        # every step, in order, with the exact commands
+```
+
+`reproduce.sh` lists each command that produced each result folder (feature extraction, cell- and patient-level
+benchmarks, fine-tuning, ensemble, DinoBloom, independent test, workload, threshold adaptation, reverse transfer,
+tables and figures). Every setting is documented in [`leukbench/docs/SETTINGS.md`](leukbench/docs/SETTINGS.md).
+Runs were done on a CPU-only machine (2 vCPUs, 8 GB RAM).
 
 ## Repository layout
 
 | Folder | Contents |
 | --- | --- |
-| `leukbench/` | Python package and scripts: manifests, patient-grouped splits, engineered features, frozen CNN / DinoBloom encoders, cell- and patient-level models (LR, LightGBM, attention MIL), metrics with patient-level bootstrap, EDA, feature engineering, baselines. See `leukbench/README.md`. |
-| `manuscript/` | IEEEtran LaTeX source (`main.tex`, `refs.bib`), figures, generated tables, figure/table generators and the compiled `main.pdf`. |
-| `results/` | Outputs of every experiment: per-model summaries (`summary.csv`), predictions, configs, EDA and feature-engineering tables. |
-| `manifests/apl_aml.csv` | One row per cell image: path (relative to the DeepAPL clone), patient, cohort, diagnosis, cell type. |
-
-Raw images are not redistributed here; they are available from the original authors at
-<https://github.com/sidhomj/DeepAPL>. Cached feature files (`features/`, ~140 MB) are excluded and can be
-regenerated with the scripts.
-
-## Reproduce
-
-```bash
-git clone https://github.com/sidhomj/DeepAPL            # data (Data/All, Data/master.csv)
-pip install -r leukbench/requirements.txt
-python -I leukbench/tests/smoke_test.py                  # must print SMOKE TEST PASSED
-
-W=.                                                      # repository root
-python -I leukbench/scripts/build_manifest.py apl_aml --root DeepAPL/Data --out $W/manifests/apl_aml.csv
-python -I leukbench/scripts/extract_handcrafted.py --manifest $W/manifests/apl_aml.csv --out $W/features/apl_aml_hand.parquet --workers 4
-python -I leukbench/scripts/extract_embeddings.py  --manifest $W/manifests/apl_aml.csv --encoder effnet_b0_imagenet --out $W/features/apl_aml_effnet.npy
-```
-
-Experiments (each writes to `results/<name>/`; exact commands are in each `config.json`):
-
-| Experiment | Script |
-| --- | --- |
-| Leakage audit, cell level (T1, T2) | `run_cell_benchmark.py` |
-| Patient-level APL detection (T3) | `run_patient_benchmark.py` |
-| Baselines from prior work on the same split | `run_baselines.py` |
-| Exploratory data analysis | `run_eda.py` |
-| Feature engineering (PCA, selection, composition, normalization) | `run_feature_engineering.py` |
-| Feature-group ablation and calibration | `run_ablation.py` |
-| PCA diagnostics (explained variance, cohort identifiability, cell-level signal per k) | `run_pca_analysis.py` |
-| Training dynamics: MIL loss/AUROC per epoch, LightGBM loss per round, sample-size learning curves | `run_training_curves.py` |
-
-**Every setting of every component** (preprocessing, features, PCA, classifiers, optimizer, learning rate,
-epochs, thresholds, bootstrap) and the exact command for each result folder are documented in
-[`leukbench/docs/SETTINGS.md`](leukbench/docs/SETTINGS.md).
-
-Tables and figures: `cd manuscript && LEUKBENCH_WORK=.. python make_results.py && python make_fig_eda.py`, then compile with
-`pdflatex main && bibtex main && pdflatex main && pdflatex main` (or upload `manuscript/` to Overleaf).
+| `leukbench/` | Python package and scripts (manifests, patient-grouped splits, engineered features, EfficientNet-B0 and DinoBloom encoders, LR / LightGBM / attention MIL, fine-tuning, metrics with patient-level bootstrap, analyses) |
+| `leukbench/docs/` | `PRESPECIFICATION.md` (commit `f47f3ec`), `PRESPEC_EXTERNAL_MLL.md` (commit `acf173b`), `SETTINGS.md` |
+| `leukbench/release/` | Locked patient-level split files, development cell folds, patient-level predictions of every reported pipeline on every external cohort |
+| `results/` | Outputs of every experiment (summaries, predictions, configurations) |
+| `manuscript/` | LaTeX sources, figures, tables, `make_results.py` (generates every table and figure from `results/`) |
+| `manifests/` | Cell manifest of APL-AML with portable paths |
 
 ## Evaluation principles
 
-- Splits are made by **patient**; the Validation cohort is never used for fitting, selection, thresholds or calibration.
-- Every scaler, imputer, PCA, feature filter and classifier is fitted inside the training fold only.
-- Decision thresholds are fixed on the development data for **sensitivity ≥ 0.95**, and results report recall,
-  missed cases, specificity, F1, NPV and calibration, not only accuracy.
-- Confidence intervals resample **patients**, not cells.
-
-## Version used for the manuscript
-
-The manuscript "Leakage, Shift and the Operating Point: Evaluating Blood-Smear Leukemia Classifiers Across Time and
-Laboratories" corresponds to branch `revision-1` (see the commit history; the final commit is recorded in the
-submission). Key files:
-
-* `leukbench/docs/PRESPECIFICATION.md` (commit f47f3ec) and `leukbench/docs/PRESPEC_EXTERNAL_MLL.md` (commit acf173b): pre-specifications
-* `leukbench/release/`: locked patient-level split files and patient-level predictions of all reported pipelines on every external cohort
-* `leukbench/docs/SETTINGS.md`: every setting and the command that produced each result folder
-* `manuscript/`: LaTeX sources, figures, tables and the generator `make_results.py`
+* Splits are made by **patient**; every scaler, imputer, PCA, filter and classifier is fitted inside training folds.
+* Decision thresholds are fixed on development data for **recall >= 0.95**; discrimination, fixed-threshold
+  performance and workload are reported separately.
+* Confidence intervals resample **patients**, not cells; recall and specificity also with exact binomial intervals.
+* Analyses are labelled confirmatory or exploratory according to what their test set had been exposed to.

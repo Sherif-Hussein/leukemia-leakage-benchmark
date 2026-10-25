@@ -96,8 +96,8 @@ a learned segmenter (e.g. Cellpose or SAM).
 
 ## Pilot results included (`results_pilot/`)
 
-Run on the real APL-AML cohort (Discovery 82 patients → Validation 24 patients), CPU only,
-handcrafted + ImageNet EfficientNet-B0 features. `tables.md` has every number with patient-level
-95% CIs; `e4_apl_patient/attention_P4.csv.gz` has per-cell attention for the external patients.
-DinoBloom (M3), fine-tuning (M5), the cross-lab experiment (E3) and C-NMC / AML-Hehr still need to
-be run with the downloaded datasets and a GPU.
+Status (October 2026): all analyses of the manuscript have been run on a CPU, including fine-tuning (partial),
+C-NMC 2019, DinoBloom-S and the independent AML-Cytomorphology_MLL_Helmholtz (AML-Hehr) cohort. The first
+pilot run described an earlier state of this package, in which DinoBloom, fine-tuning and the cross-laboratory
+experiments had not yet been run; see `../PROVENANCE.md` for the full history and `docs/SETTINGS.md` for every
+command.

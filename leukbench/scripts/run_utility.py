@@ -121,7 +121,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 7.5, "axes.spines.top": False, "axes.spines.right": False})
-fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.5))
+fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.7))
 cols = {"Primary pipeline": "#B03A2E", "DinoBloom + engineered": "#2E7D32", "Engineered, pooled LR": "#2F6DB5", "Fine-tuned CNN": "#8C8C8C", "DinoBloom, attention MIL": "#6A9F58"}
 for k, coh in enumerate(["Independent (MLL)", "APL-AML later cohort"]):
     for (c_, nm), d in C.items():
@@ -130,12 +130,12 @@ for k, coh in enumerate(["Independent (MLL)", "APL-AML later cohort"]):
         y, p = d.y.values, d.p.values; o = np.argsort(-p, kind="stable")
         ax[k].plot(np.arange(1, len(y) + 1) / len(y), np.cumsum(y[o] == 1) / y.sum(), color=cols[nm], lw=1.5 if nm.startswith("Primary") else 1, label=nm)
     ax[k].plot([0, 1], [0, 1], ":", color="#999", lw=0.8); ax[k].axhline(0.95, color="#B03A2E", ls=":", lw=0.6)
-    ax[k].set_xlabel("Fraction of patients referred for urgent review"); ax[k].set_ylabel("APL patients caught (recall)")
-    ax[k].set_title(f"({'ab'[k]}) {coh}", loc="left", fontsize=7.5); ax[k].legend(frameon=False, fontsize=5.6, loc="lower right")
+    ax[k].set_xlabel("Fraction of patients referred"); ax[k].set_ylabel("Fraction of APL patients captured")
+    ax[k].set_title(f"({'ab'[k]}) {coh}", loc="left", fontsize=7.5); ax[k].legend(frameon=False, fontsize=6.2, loc="lower right")
 for (c_, nm), (pr, rc, _) in PR.items():
     if c_ == "Independent (MLL)":
         ax[2].plot(rc, pr, color=cols[nm], lw=1.5 if nm.startswith("Primary") else 1)
 ax[2].axhline(24 / 129, color="#999", ls=":", lw=0.8); ax[2].set_xlabel("Recall"); ax[2].set_ylabel("Precision (PPV)"); ax[2].set_ylim(0, 1.02)
-ax[2].set_title("(c) Precision-recall, independent cohort", loc="left", fontsize=7.5)
+ax[2].set_title("(c) Precision-recall (MLL)", loc="left", fontsize=7.5)
 fig.tight_layout(); fig.savefig(out / "fig_workload.pdf"); fig.savefig(out / "fig_workload.png", dpi=200)
 print("wrote", out)

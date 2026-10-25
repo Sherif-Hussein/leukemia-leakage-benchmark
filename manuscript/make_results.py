@@ -622,7 +622,7 @@ if (R / "cnmc_fe" / "feature_engineering.csv").exists():
     L += [r"\end{tabular}}", r"\end{table}"]
     (TAB / "tab_pcaimpact.tex").write_text("\n".join(L))
     facts["pca_impact"] = pd.DataFrame(imp).round(4).to_dict("records")
-    fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.3))
+    fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.9))
     for i, (nm, c) in enumerate([("APL-AML", BLUE), ("C-NMC", GREEN)]):
         for v, ls, lab in [("nw", "-", "PCA scores kept at natural scale"), ("std", "--", "each component standardized (whitened)")]:
             d = sw[(nm, v)]; s_ = d[d.k != 1280]; raw = d[d.k == 1280].iloc[0]
@@ -631,17 +631,20 @@ if (R / "cnmc_fe" / "feature_engineering.csv").exists():
             if v == "nw":
                 ax[i].fill_between(s_.k, s_.ext_lo, s_.ext_hi, color=c, alpha=0.10, lw=0)
         ax[i].set_title(f"({'ab'[i]}) {nm}: external AUROC", loc="left", fontsize=8); ax[i].set_ylim(0.3, 1.02)
-        ax[i].legend(frameon=False, fontsize=5.8, loc="lower right")
     ax[0].set_ylabel("Patient/subject AUROC")
+    _h = [matplotlib.lines.Line2D([], [], color="#444", ls="-", marker="o", ms=3, label="PCA scores at natural scale (band: 95% CI)"),
+          matplotlib.lines.Line2D([], [], color="#444", ls="--", marker="o", ms=3, alpha=0.6, label="each component standardized (whitened)"),
+          matplotlib.lines.Line2D([], [], color="#444", ls=":", label="no PCA")]
     for nm, c in [("APL-AML", BLUE), ("C-NMC", GREEN)]:
         d = sw[(nm, "nw")]; s_ = d[d.k != 1280]
         ax[2].plot(s_.k, s_.cell_apl_auroc_external, "o-", color=c, ms=3.2, label=f"{nm}: disease signal")
         ax[2].plot(s_.k, s_.cohort_id_auroc, "s--", color=c, ms=2.8, lw=0.9, label=f"{nm}: cohort signal")
-    ax[2].set_ylabel("Cell-level AUROC"); ax[2].set_ylim(0.4, 0.98); ax[2].legend(frameon=False, fontsize=5.6, loc="upper left")
+    ax[2].set_ylabel("Cell-level AUROC"); ax[2].set_ylim(0.4, 1.0); ax[2].legend(frameon=False, fontsize=6.2, loc="upper left", ncol=1)
     ax[2].set_title("(c) What the components keep", loc="left", fontsize=8)
     for a_ in ax:
         a_.set_xscale("log", base=2); a_.set_xticks([4, 8, 16, 32, 64, 128, 256]); a_.set_xticklabels([4, 8, 16, 32, 64, 128, 256]); a_.set_xlabel("PCA components")
-    fig.tight_layout(); fig.savefig(OUT / "figures" / "fig_pca_two.pdf"); fig.savefig(OUT / "figures" / "fig_pca_two.png", dpi=200); plt.close(fig)
+    fig.tight_layout(rect=(0, 0.09, 1, 1)); fig.legend(handles=_h, loc="lower center", ncol=3, frameon=False, fontsize=6.8)
+    fig.savefig(OUT / "figures" / "fig_pca_two.pdf"); fig.savefig(OUT / "figures" / "fig_pca_two.png", dpi=200); plt.close(fig)
     for key, d in sw.items():
         print(key); print(d[["config", "explained_var", "cv_auroc", "ext_auroc", "ext_lo", "ext_hi", "delta", "dlo", "dhi", "dp", "dp_holm", "sens95_sens", "sens95_fn", "sens95_spec", "sens95_f1"]].round(3).to_string())
 
@@ -760,7 +763,7 @@ if (LR_ / "local_recalibration.csv").exists():
     show = ["Macenko + frozen CNN, no PCA", "Secondary: Macenko + frozen CNN + PCA-64", "Engineered, pooled LR", "Engineered, attention MIL",
             "Macenko + fine-tuned EfficientNet-B0", "Primary: pre-specified ensemble"]
     L = [r"\begin{table*}[!t]", r"\centering",
-         r"\caption{Can a new laboratory restore the operating point with a few local cases? $k$ confirmed local patients ($k/2$ APL, $k/2$ AML) are drawn from the Validation cohort and the remaining $24-k$ patients are scored (2,000 random draws). R0: development threshold. R2: development threshold lowered, if needed, to just below the lowest score of the local APL cases. P(miss): probability that at least one APL patient in the test set is missed.}",
+         r"\caption{Local threshold adaptation on the APL-AML Validation cohort (exploratory): $k$ confirmed local patients ($k/2$ APL, $k/2$ AML) are drawn from the Validation cohort and the remaining $24-k$ patients are scored (2,000 random draws). R0: development threshold. R2: development threshold lowered, if needed, to just below the lowest score of the local APL cases. P(miss): probability that at least one APL patient in the test set is missed.}",
          r"\label{tab:recal}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lcccccccccccc}", r"\toprule",
          r" & \multicolumn{4}{c}{R0, $k=0$} & \multicolumn{4}{c}{R2, $k=4$} & \multicolumn{4}{c}{R2, $k=8$} \\",
          r"\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}",
@@ -897,13 +900,13 @@ L[-1] = r"\bottomrule"
 L += [r"\end{tabular}}", r"\end{table*}"]
 (TAB / "tab_ladder.tex").write_text("\n".join(L))
 groups = list(LD.groupby(["dataset", "level"], sort=False))
-fig, ax = plt.subplots(2, 2, figsize=(7.16, 4.6), gridspec_kw=dict(height_ratios=[4, 8]))
+fig, ax = plt.subplots(2, 2, figsize=(7.16, 5.4), gridspec_kw=dict(height_ratios=[4, 9]))
 for a_, ((ds, lv), grp) in zip(ax.T.ravel(), groups):
     y = np.arange(len(grp))[::-1]
     a_.errorbar(grp.auroc, y, xerr=[grp.auroc - grp.lo, grp.hi - grp.auroc], fmt="o", color=BLUE, ms=4, elinewidth=0.9, capsize=2, label="AUROC [95% CI]")
     a_.plot(grp.f1, y + 0.18, "s", color=ORANGE, ms=3.5, label="F1, fixed threshold")
     a_.plot(grp.sens, y - 0.18, "v", color=RED, ms=3.5, label="Recall, fixed threshold")
-    a_.set_yticks(y, [s_.replace(" (secondary)", "\n(secondary)").replace("Primary: ensemble ", "Primary ensemble\n").replace("Primary: ensemble of the three members above", "Primary ensemble") for s_ in grp.step], fontsize=6.2)
+    a_.set_yticks(y, [s_.replace(" (secondary)", "\n(secondary)").replace("Primary: ensemble ", "Primary ensemble\n").replace("Primary: ensemble of the three members above", "Primary ensemble") for s_ in grp.step], fontsize=7)
     a_.axvline(grp.auroc.iloc[0], color="#BBB", lw=0.7, ls=":")
     a_.set_xlim(0.3, 1.02); a_.set_title(f"{ds}, {'cells' if lv == 'cell' else 'patients'}", fontsize=7.5, loc="left")
 for a_ in ax[1]:
@@ -1139,7 +1142,7 @@ if (MLLR / "summary.csv").exists():
     facts["mll_external"] = MT_.round(4).to_dict("records")
     shm = pd.read_csv(R / "mll_external" / "shift_test.csv"); facts["mll_shift"] = shm.round(4).to_dict("records")
     L = [r"\begin{table*}[!t]", r"\centering",
-         r"\caption{Independent external test (pre-registered): models trained on the APL-AML Discovery cohort only and applied once to the AML-Cytomorphology\_MLL\_Helmholtz cohort (another laboratory, country, scanner and stain; 24 APL and 105 other AML patients, up to 200 cells each). Label-free shift test: AUROC " + f"{shm.cohort_auroc.iloc[0]:.3f}" + r" for telling MLL from Discovery AML cells by stain and color ($p\leq0.03$), so Macenko normalization was applied to the CNN branch. Threshold metrics at the Discovery operating point (recall $\geq$0.95), with exact 95\% CIs; NPV n/a: no patient called negative.}",
+         r"\caption{Independent external test (prespecified analysis plan, commit acf173b): models trained on the APL-AML Discovery cohort only and applied once to the AML-Cytomorphology\_MLL\_Helmholtz cohort (another laboratory, country, scanner and stain; 24 APL and 105 other AML patients, up to 200 cells each). Label-free shift test: AUROC " + f"{shm.cohort_auroc.iloc[0]:.3f}" + r" for telling MLL from Discovery AML cells by stain and color ($p\leq0.03$), so Macenko normalization was applied to the CNN branch. Threshold metrics at the Discovery operating point (recall $\geq$0.95), with exact 95\% CIs; NPV n/a: no patient called negative.}",
          r"\label{tab:mll}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{lcccccc}", r"\toprule",
          r"Model & AUROC [95\% CI] & Recall (95\% CI) [missed of 24] & Specificity (95\% CI) & F1 & NPV & Accuracy \\", r"\midrule"]
     for r in MT_.itertuples():
@@ -1236,7 +1239,7 @@ if (UT / "workload.csv").exists():
          r"Cohort & Model & AP [95\% CI] & 10\% & 20\% & 30\% & prevalence (top 20\%) & 95\% of APL & all APL \\", r"\midrule"]
     for coh, g in wk.groupby("cohort", sort=False):
         for i, r in enumerate(g.itertuples()):
-            rr = lambda q: f"{getattr(r, f'recall_top{q}'):.2f} [{getattr(r, f'recall_top{q}_lo'):.2f}, {getattr(r, f'recall_top{q}_hi'):.2f}]"
+            rr = lambda q: f"{getattr(r, f'recall_top{q}'):.3f} [{getattr(r, f'recall_top{q}_lo'):.2f}, {getattr(r, f'recall_top{q}_hi'):.2f}]"
             L.append(f"{coh + f' ({r.n_pos}/{r.n})' if i == 0 else ''} & {r.model} & {ci(r.ap, r.ap_lo, r.ap_hi, 2)} & {rr(10)} & {rr(20)} & {rr(30)} & {r.ppv10_top20:.2f} & "
                      f"{r.workload_r95:.0%} [{r.w95_lo:.0%}, {r.w95_hi:.0%}] & {r.workload_r100:.0%} \\\\".replace("%", r"\%"))
         L.append(r"\midrule")
@@ -1247,7 +1250,7 @@ if (UT / "local_recal_split.csv").exists():
     ls_ = pd.read_csv(UT / "local_recal_split.csv"); facts["local_recal_split"] = ls_.round(4).to_dict("records")
     facts["guarantee"] = pd.read_csv(UT / "guarantee.csv").to_dict("records")
     L = [r"\begin{table}[!htbp]", r"\centering",
-         r"\caption{Local recalibration with a separate calibration sample (independent cohort; 2,000 random splits). Thresholds are set on the calibration sample only and evaluated on all remaining patients. POS: just below the lowest calibration APL score; BOTH: threshold maximizing calibration specificity subject to calibration recall $\geq$0.9. P05: 5th percentile of evaluation recall over splits; P(miss): probability of missing at least one APL patient in the evaluation sample.}",
+         r"\caption{Local threshold adaptation with a separate calibration sample (independent cohort; 2,000 random splits). Thresholds are set on the calibration sample only and evaluated on all remaining patients. POS: just below the lowest calibration APL score; BOTH: threshold maximizing calibration specificity subject to calibration recall $\geq$0.9. P05: 5th percentile of evaluation recall over splits; P(miss): probability of missing at least one APL patient in the evaluation sample.}",
          r"\label{tab:recalsplit}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
          r"Model & Calibration (APL/AML) & Rule & Recall & P05 & Expected & Spec. & Referred & P(miss) \\", r"\midrule"]
     for (m, cp_, cn_), g in ls_.groupby(["model", "cal_pos", "cal_neg"], sort=False):

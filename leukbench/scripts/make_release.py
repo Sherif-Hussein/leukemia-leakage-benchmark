@@ -30,6 +30,18 @@ P = {("mll", "primary_ensemble"): pd.read_csv(R / "mll_ensemble/ensemble_test.cs
      ("cnmc_fold2", "primary_ensemble"): pd.read_csv(R / "ensemble_cnmc/ensemble_test.csv").rename(columns={"p": "score"}),
      ("cnmc_fold2", "dinobloom_engineered"): bench("cnmc_patient_dino", "PDF"),
      ("apl_all_reverse", "dinobloom_engineered_trained_on_mll"): bench("reciprocal_mll_to_apl", "PDF")}
+def thr95(y, p):
+    pos = np.sort(p[y == 1]); return float(pos[int(np.floor(0.05 * len(pos)))]) - 1e-9
+def benchcv(f, m):
+    p = pd.read_csv(R / f / "predictions.csv"); c = p[(p.model == m) & (p["eval"] == "cv")].groupby("patient_id").agg(y=("y", "first"), p=("p", "mean"))
+    return thr95(c.y.values, c.p.values)
+cvfile = lambda f: (lambda c: thr95(c.y.values, c.p.values))(pd.read_csv(f))
+TH = {("mll", "primary_ensemble"): cvfile(R / "mll_ensemble/ensemble_cv.csv"), ("mll", "dinobloom_engineered"): benchcv("mll_patient", "PDF"),
+      ("mll", "engineered_pooled_lr"): benchcv("mll_patient", "P1"), ("mll", "finetuned_cnn"): cvfile(R / "mll_finetune_macenko/patient_predictions_cv.csv"),
+      ("apl_validation", "primary_ensemble"): cvfile(R / "ensemble_apl_macenko/ensemble_cv.csv"), ("apl_validation", "dinobloom_attention_mil"): benchcv("apl_patient_dino", "PDM"),
+      ("cnmc_fold2", "primary_ensemble"): cvfile(R / "ensemble_cnmc/ensemble_cv.csv"), ("cnmc_fold2", "dinobloom_engineered"): benchcv("cnmc_patient_dino", "PDF"),
+      ("apl_all_reverse", "dinobloom_engineered_trained_on_mll"): benchcv("reciprocal_mll_to_apl", "PDF")}
+pd.DataFrame([dict(cohort=c, model=m, development_threshold=t) for (c, m), t in TH.items()]).to_csv(out / "predictions" / "thresholds.csv", index=False)
 for (coh, m), d in P.items():
     d[["patient_id", "y", "score"]].to_csv(out / "predictions" / f"{coh}__{m}.csv", index=False)
 (out / "README.md").write_text("""# Release files
