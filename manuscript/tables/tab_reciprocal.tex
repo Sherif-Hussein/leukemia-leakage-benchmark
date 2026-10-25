@@ -1,0 +1,19 @@
+\begin{table}[!t]
+\centering
+\caption{Reciprocal cross-laboratory transfer at patient level. Forward: trained on APL-AML Discovery (82 patients), tested on the independent MLL cohort (24 APL, 105 AML). Reverse: trained on the MLL cohort (129 patients; settings and threshold from patient-grouped CV within MLL), tested on all 106 APL-AML patients (34 APL). Dev.: development CV AUROC. Disc./Val.: reverse AUROC within the earlier (82) and later (24) APL-AML patients. Recall and specificity at the source-cohort threshold. The APL-AML cohort had been examined extensively during development, so the reverse direction is exploratory.}
+\label{tab:reciprocal}
+\setlength{\tabcolsep}{2.4pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{APL-AML $\rightarrow$ MLL} & \multicolumn{4}{c}{MLL $\rightarrow$ APL-AML (exploratory)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-7}
+Model & Dev. & External [95\% CI] & Dev. & All 106 [95\% CI] & Disc./Val. & Recall / Spec. \\
+\midrule
+Engineered, pooled LR & 0.867 & 0.832 [0.729, 0.916] & 0.909 & 0.750 [0.645, 0.840] & 0.75/0.71 & 0.47 / 0.83 \\
+Engineered, attention MIL & 0.827 & 0.705 [0.578, 0.819] & 0.901 & 0.540 [0.486, 0.604] & 0.48/0.64 & 0.00 / 1.00 \\
+DinoBloom-S, pooled LR & 0.880 & 0.840 [0.732, 0.933] & 0.958 & 0.764 [0.665, 0.853] & 0.79/0.61 & 0.12 / 0.99 \\
+DinoBloom-S + engineered, pooled LR & 0.869 & 0.877 [0.773, 0.960] & 0.939 & 0.776 [0.679, 0.860] & 0.79/0.69 & 0.06 / 1.00 \\
+\bottomrule
+\end{tabular}}
+\end{table}

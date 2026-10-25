@@ -1,0 +1,37 @@
+\begin{table}[!htbp]
+\centering
+\caption{Local recalibration with a separate calibration sample (independent cohort; 2,000 random splits). Thresholds are set on the calibration sample only and evaluated on all remaining patients. POS: just below the lowest calibration APL score; BOTH: threshold maximizing calibration specificity subject to calibration recall $\geq$0.9. P05: 5th percentile of evaluation recall over splits; P(miss): probability of missing at least one APL patient in the evaluation sample.}
+\label{tab:recalsplit}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccccc}
+\toprule
+Model & Calibration (APL/AML) & Rule & Recall & P05 & Expected & Spec. & Referred & P(miss) \\
+\midrule
+Primary pipeline & 5/20 & POS & 0.84 & 0.53 & 0.83 & 0.59 & 0.49 & 0.79 \\
+Primary pipeline & 5/20 & BOTH & 0.84 & 0.53 & 0.83 & 0.59 & 0.49 & 0.79 \\
+Primary pipeline & 8/30 & POS & 0.89 & 0.62 & 0.89 & 0.48 & 0.58 & 0.67 \\
+Primary pipeline & 8/30 & BOTH & 0.89 & 0.62 & 0.89 & 0.48 & 0.58 & 0.67 \\
+Primary pipeline & 12/50 & POS & 0.93 & 0.75 & 0.92 & 0.35 & 0.70 & 0.48 \\
+Primary pipeline & 12/50 & BOTH & 0.86 & 0.58 & 0.92 & 0.69 & 0.41 & 0.76 \\
+DinoBloom + engineered & 5/20 & POS & 0.83 & 0.47 & 0.83 & 0.59 & 0.49 & 0.82 \\
+DinoBloom + engineered & 5/20 & BOTH & 0.83 & 0.47 & 0.83 & 0.59 & 0.49 & 0.82 \\
+DinoBloom + engineered & 8/30 & POS & 0.89 & 0.62 & 0.89 & 0.45 & 0.61 & 0.67 \\
+DinoBloom + engineered & 8/30 & BOTH & 0.89 & 0.62 & 0.89 & 0.45 & 0.61 & 0.67 \\
+DinoBloom + engineered & 12/50 & POS & 0.93 & 0.75 & 0.92 & 0.34 & 0.70 & 0.49 \\
+DinoBloom + engineered & 12/50 & BOTH & 0.85 & 0.58 & 0.92 & 0.59 & 0.49 & 0.77 \\
+Engineered, pooled LR & 5/20 & POS & 0.83 & 0.53 & 0.83 & 0.55 & 0.52 & 0.79 \\
+Engineered, pooled LR & 5/20 & BOTH & 0.83 & 0.53 & 0.83 & 0.55 & 0.52 & 0.79 \\
+Engineered, pooled LR & 8/30 & POS & 0.89 & 0.62 & 0.89 & 0.43 & 0.62 & 0.67 \\
+Engineered, pooled LR & 8/30 & BOTH & 0.89 & 0.62 & 0.89 & 0.43 & 0.62 & 0.67 \\
+Engineered, pooled LR & 12/50 & POS & 0.92 & 0.75 & 0.92 & 0.31 & 0.73 & 0.51 \\
+Engineered, pooled LR & 12/50 & BOTH & 0.84 & 0.58 & 0.92 & 0.62 & 0.46 & 0.76 \\
+Fine-tuned CNN & 5/20 & POS & 0.83 & 0.53 & 0.83 & 0.44 & 0.61 & 0.78 \\
+Fine-tuned CNN & 5/20 & BOTH & 0.83 & 0.53 & 0.83 & 0.44 & 0.61 & 0.78 \\
+Fine-tuned CNN & 8/30 & POS & 0.89 & 0.62 & 0.89 & 0.36 & 0.69 & 0.68 \\
+Fine-tuned CNN & 8/30 & BOTH & 0.89 & 0.62 & 0.89 & 0.36 & 0.69 & 0.68 \\
+Fine-tuned CNN & 12/50 & POS & 0.93 & 0.75 & 0.92 & 0.27 & 0.76 & 0.50 \\
+Fine-tuned CNN & 12/50 & BOTH & 0.85 & 0.58 & 0.92 & 0.45 & 0.60 & 0.75 \\
+\bottomrule
+\end{tabular}}
+\end{table}

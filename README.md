@@ -61,3 +61,14 @@ Tables and figures: `cd manuscript && LEUKBENCH_WORK=.. python make_results.py &
 - Decision thresholds are fixed on the development data for **sensitivity ≥ 0.95**, and results report recall,
   missed cases, specificity, F1, NPV and calibration, not only accuracy.
 - Confidence intervals resample **patients**, not cells.
+
+## Version used for the manuscript
+
+The manuscript "Leakage, Shift and the Operating Point: Evaluating Blood-Smear Leukemia Classifiers Across Time and
+Laboratories" corresponds to branch `revision-1` (see the commit history; the final commit is recorded in the
+submission). Key files:
+
+* `leukbench/docs/PRESPECIFICATION.md` (commit f47f3ec) and `leukbench/docs/PRESPEC_EXTERNAL_MLL.md` (commit acf173b): pre-specifications
+* `leukbench/release/`: locked patient-level split files and patient-level predictions of all reported pipelines on every external cohort
+* `leukbench/docs/SETTINGS.md`: every setting and the command that produced each result folder
+* `manuscript/`: LaTeX sources, figures, tables and the generator `make_results.py`

@@ -1,0 +1,22 @@
+\begin{table}[!htbp]
+\centering
+\caption{Analysis registry: which results are confirmatory and which exploratory, and what each test set had been exposed to before it was scored.}
+\label{tab:registry}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{4.2cm}p{3.4cm}p{8.6cm}}
+\toprule
+Analysis & Status & Exposure of the test set before scoring \\
+\midrule
+Leakage vs.\ external generalization gap (T1, T2, T4) & Pre-planned, descriptive & External sets used only for scoring; same models and folds for all protocols \\
+APL-AML later (Validation) cohort, all models & Exploratory & Evaluated repeatedly in the first analysis and the revisions; preprocessing subset included its patients (reused test set) \\
+C-NMC fold 2, all models & Secondary & Evaluated for several configurations; never used for selection \\
+Pooled 106-patient CV & Secondary, internal & Not an external test \\
+Primary and secondary pipelines & Pre-specified (commit \texttt{f47f3ec}) & Specified after first-analysis results on the Validation cohort were known \\
+Independent MLL cohort: primary, secondary, DinoBloom + engineered & \textbf{Confirmatory} (commit \texttt{acf173b}) & Untouched: plan, models and thresholds fixed before any MLL image was scored \\
+Workload, split-sample recalibration, reciprocal transfer on MLL & Post hoc (requested in review) & Use MLL scores after the confirmatory analysis; no model changed \\
+Scan-time confounding, shift tests, calibration, bag size & Exploratory & Label-free or development-only, except calibration on external scores \\
+C-NMC improvement pilot (crop, LightGBM, DinoBloom) & Exploratory, development CV & External fold 2 reported after selection on development CV \\
+\bottomrule
+\end{tabular}
+\end{table}

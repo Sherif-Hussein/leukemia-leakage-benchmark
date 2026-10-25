@@ -83,7 +83,7 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_leakage.pdf}
-\caption{AUROC under the three protocols at cell level (mean of three seeds). Orange: leakage (L, image-level minus patient-grouped CV) and shift (S, grouped CV minus external). (a) Cells labeled with the patient's diagnosis. (b) Cells labeled with their own type.}
+\caption{AUROC under the three protocols at cell level (mean of three seeds). Orange: leakage (L, image-level minus patient-grouped CV) and external generalization gap (G, grouped CV minus external). (a) Cells labeled with the patient's diagnosis. (b) Cells labeled with their own type.}
 \label{fig:leakage}
 \end{figure}
 
@@ -120,6 +120,8 @@ Attention MIL, 5-fold CV & 33--61\,s per seed \\
 \label{fig:reliability}
 \end{figure}
 \input{tables/tab_bagsize}
+\input{tables/tab_recalsplit}
+\input{tables/tab_registry}
 
 \section*{S7. Ablation and explanation of engineered features}
 \begin{figure}[!htbp]

@@ -1,12 +1,12 @@
 \begin{table*}[!t]
 \centering
-\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Leakage: image-level minus patient-grouped CV AUROC; shift: grouped CV minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}
+\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Leakage: image-level minus patient-grouped CV AUROC; external gap: grouped CV minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}
 \label{tab:finetune}
 \setlength{\tabcolsep}{3.5pt}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccccccc}
 \toprule
-Task & Model & Image CV & Grouped CV & External [95\% CI] & Leakage & Shift & Recall & Spec. & F1 \\
+Task & Model & Image CV & Grouped CV & External [95\% CI] & Leakage & Ext.\ gap & Recall & Spec. & F1 \\
 \midrule
 T1 APL-AML, diagnosis on cells & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & +0.091 & +0.227 & 0.69 & 0.55 & 0.54 \\
  & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & +0.042 & +0.237 & 0.73 & 0.46 & 0.52 \\

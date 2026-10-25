@@ -1,13 +1,13 @@
 \begin{table*}[!t]
 \centering
-\caption{Replication on the second dataset, C-NMC 2019 (ALL vs.\ normal B cells; development: official folds 0--1, 42 subjects; external: fold 2, 31 unseen subjects, 17 with ALL). Same features, models, protocol and operating-point rule as for APL-AML. Leakage: image-level minus subject-grouped CV AUROC; shift: grouped CV minus external AUROC.}
+\caption{Replication on the second dataset, C-NMC 2019 (ALL vs.\ normal B cells; development: official folds 0--1, 42 subjects; external: fold 2, 31 unseen subjects, 17 with ALL). Same features, models, protocol and operating-point rule as for APL-AML. Leakage: image-level minus subject-grouped CV AUROC; external gap: grouped CV minus external AUROC.}
 \label{tab:cnmc}
 \setlength{\tabcolsep}{3.5pt}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccccccc}
 \toprule
 \multicolumn{10}{l}{\emph{(a) Cell level: every cell carries its subject's diagnosis (mean of 3 seeds)}} \\
-Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Leakage & Shift \\
+Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Leakage & Ext.\ gap \\
 \midrule
 Engineered + LightGBM & & 0.972 & 0.876 & 0.839 [0.694, 0.921] & 0.91 & 0.61 & 0.88 & +0.096 & +0.037 \\
 Engineered + LR & & 0.933 & 0.864 & 0.840 [0.730, 0.902] & 0.95 & 0.58 & 0.89 & +0.069 & +0.023 \\

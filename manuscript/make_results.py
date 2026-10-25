@@ -108,11 +108,11 @@ if (R / "cnmc_cell" / "summary.csv").exists():
     DEC += decomp(R / "cnmc_cell" / "summary.csv", "T4 C-NMC: cells (subject label)", ["M1lr", "M2", "M4"])
 DEC = pd.DataFrame(DEC); DEC.to_csv(TAB / "leakage_decomposition.csv", index=False); facts["leakage_decomposition"] = DEC.round(4).to_dict("records")
 L = [r"\begin{table*}[!t]", r"\centering",
-     r"\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for shift). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}",
+     r"\caption{How much of the gap between reported and real performance is due to leakage and how much to the external generalization gap (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for the gap). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). External generalization gap = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC); it mixes all differences between cohorts and is not a causal effect of any single one. Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}",
      r"\label{tab:leakage}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llcccccccccc}", r"\toprule",
      r" & & \multicolumn{4}{c}{AUROC} & \multicolumn{2}{c}{Decomposition of the gap} & \multicolumn{3}{c}{External, fixed operating point} \\",
      r"\cmidrule(lr){3-6}\cmidrule(lr){7-8}\cmidrule(lr){9-11}",
-     r"Task & Model & Image CV & Grouped CV & External [95\% CI] & Leaky-trained ext. & Leakage & Shift & Recall & Spec. & F1 \\", r"\midrule"]
+     r"Task & Model & Image CV & Grouped CV & External [95\% CI] & Leaky-trained ext. & Leakage & Ext.\ gap & Recall & Spec. & F1 \\", r"\midrule"]
 for t, grp in DEC.groupby("task", sort=False):
     best = grp.ext.max()
     for j, r in enumerate(grp.itertuples()):
@@ -133,7 +133,7 @@ for k, (ax, (t, tname)) in enumerate(zip(axes, TASKS.items())):
     for yi, r in zip(y, sub.itertuples()):
         ax.plot([r.ext, r.image_cv], [yi, yi], color="#C9CED6", lw=2, zorder=1)
         ax.errorbar(r.ext, yi, xerr=[[r.ext - r.ext_lo], [r.ext_hi - r.ext]], fmt="none", ecolor=BLUE, elinewidth=0.8, capsize=2)
-        ax.text(r.image_cv + 0.006, yi + 0.18, f"L {r.image_cv - r.grouped_cv:+.2f} / S {r.grouped_cv - r.ext:+.2f}", fontsize=6.0, color=ORANGE)
+        ax.text(r.image_cv + 0.006, yi + 0.18, f"L {r.image_cv - r.grouped_cv:+.2f} / G {r.grouped_cv - r.ext:+.2f}", fontsize=6.0, color=ORANGE)
     ax.scatter(sub.image_cv, y, s=26, color=ORANGE, zorder=3, label="Image-level CV")
     ax.scatter(sub.grouped_cv, y, s=26, color=GREY, marker="s", zorder=3, label="Patient-grouped CV")
     ax.scatter(sub.ext, y, s=30, color=BLUE, marker="D", zorder=3, label="External cohort (95% CI)")
@@ -529,10 +529,10 @@ if (R / "cnmc_cell" / "summary.csv").exists():
     cp.to_csv(TAB / "cnmc_subject.csv", index=False); facts["cnmc_subject"] = cp.round(4).to_dict("records")
     npos = int(pd.read_csv(R / "cnmc_fe" / "predictions.csv").groupby("patient_id").y.first().sum())
     L = [r"\begin{table*}[!t]", r"\centering",
-         r"\caption{Replication on the second dataset, C-NMC 2019 (ALL vs.\ normal B cells; development: official folds 0--1, 42 subjects; external: fold 2, 31 unseen subjects, 17 with ALL). Same features, models, protocol and operating-point rule as for APL-AML. Leakage: image-level minus subject-grouped CV AUROC; shift: grouped CV minus external AUROC.}",
+         r"\caption{Replication on the second dataset, C-NMC 2019 (ALL vs.\ normal B cells; development: official folds 0--1, 42 subjects; external: fold 2, 31 unseen subjects, 17 with ALL). Same features, models, protocol and operating-point rule as for APL-AML. Leakage: image-level minus subject-grouped CV AUROC; external gap: grouped CV minus external AUROC.}",
          r"\label{tab:cnmc}", r"\setlength{\tabcolsep}{3.5pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llcccccccc}", r"\toprule",
          r"\multicolumn{10}{l}{\emph{(a) Cell level: every cell carries its subject's diagnosis (mean of " + (str(int(cn.seeds.min())) if cn.seeds.min() == cn.seeds.max() else str(int(cn.seeds.min())) + r"--" + str(int(cn.seeds.max()))) + r" seeds)}} \\",
-         r"Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Leakage & Shift \\", r"\midrule"]
+         r"Model & & Image CV & Grouped CV & External [95\% CI] & Recall & Spec. & F1 & Leakage & Ext.\ gap \\", r"\midrule"]
     for r in cn.itertuples():
         L.append(f"{r.model} & & {r.image_cv:.3f} & {r.grouped_cv:.3f} & {ci(r.ext, r.lo, r.hi)} & {r.sens:.2f} & {r.spec:.2f} & {r.f1:.2f} & {r.leak:+.3f} & {r.shift:+.3f} \\\\")
     L += [r"\midrule", r"\multicolumn{10}{l}{\emph{(b) Subject level: is this subject's sample leukemic?}} \\",
@@ -681,9 +681,9 @@ if (R / "finetune_t1" / "summary.csv").exists():
                 fpat[nm] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) else v) for k, v in q.iloc[0].to_dict().items()}
     facts["finetune_patient"] = fpat
     L = [r"\begin{table*}[!t]", r"\centering",
-         r"\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Leakage: image-level minus patient-grouped CV AUROC; shift: grouped CV minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}",
+         r"\caption{Engineered, frozen and fine-tuned features at cell level on both datasets. The fine-tuned model adapts the last two stages of EfficientNet-B0 (Table~\ref{S-tab:hparams}; one seed); the other models are averaged over three seeds. Leakage: image-level minus patient-grouped CV AUROC; external gap: grouped CV minus external AUROC. Recall, specificity and F1 on the external set at the operating point fixed on development data. Best external AUROC per task in bold.}",
          r"\label{tab:finetune}", r"\setlength{\tabcolsep}{3.5pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llcccccccc}", r"\toprule",
-         r"Task & Model & Image CV & Grouped CV & External [95\% CI] & Leakage & Shift & Recall & Spec. & F1 \\", r"\midrule"]
+         r"Task & Model & Image CV & Grouped CV & External [95\% CI] & Leakage & Ext.\ gap & Recall & Spec. & F1 \\", r"\midrule"]
     for t, grp in ft.groupby("task", sort=False):
         for i, r in enumerate(grp.itertuples()):
             ic = "--" if np.isnan(r.image_cv) else f"{r.image_cv:.3f}"
@@ -1222,4 +1222,65 @@ if pil:
 if (R / "shap_cnmc" / "fig_shap.pdf").exists():
     shutil.copy(R / "shap_cnmc" / "fig_shap.pdf", OUT / "figures" / "fig_shap.pdf"); shutil.copy(R / "shap_cnmc" / "fig_shap.png", OUT / "figures" / "fig_shap.png")
     facts["shap_cnmc_groups"] = pd.read_csv(R / "shap_cnmc" / "shap_groups.csv").round(4).to_dict("records")
+(TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))
+
+# ================================================================== REVISION 4: clinical utility (workload), split-sample recalibration, reciprocal transfer
+UT = R / "utility"
+if (UT / "workload.csv").exists():
+    wk = pd.read_csv(UT / "workload.csv"); facts["workload"] = wk.round(4).to_dict("records")
+    shutil.copy(UT / "fig_workload.pdf", OUT / "figures" / "fig_workload.pdf"); shutil.copy(UT / "fig_workload.png", OUT / "figures" / "fig_workload.png")
+    L = [r"\begin{table*}[!t]", r"\centering",
+         r"\caption{Can the ranking reduce the review workload? Patients are referred for urgent review in order of their score. Recall: fraction of APL patients among the referred ones caught when the top 10\%, 20\% or 30\% of patients are referred (patient-bootstrap 95\% CI); PPV at 10\% APL prevalence for the same operating point; workload needed to catch 95\% and all APL patients (bootstrap 95\% CI for 95\%); AP: average precision (base rate: 0.19 in the independent cohort, 0.50 in the later cohort). No threshold is fitted on these cohorts.}",
+         r"\label{tab:workload}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\textwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
+         r" & & & \multicolumn{3}{c}{Recall when referring the top} & PPV at 10\% & \multicolumn{2}{c}{Workload to catch} \\", r"\cmidrule(lr){4-6}\cmidrule(lr){8-9}",
+         r"Cohort & Model & AP [95\% CI] & 10\% & 20\% & 30\% & prevalence (top 20\%) & 95\% of APL & all APL \\", r"\midrule"]
+    for coh, g in wk.groupby("cohort", sort=False):
+        for i, r in enumerate(g.itertuples()):
+            rr = lambda q: f"{getattr(r, f'recall_top{q}'):.2f} [{getattr(r, f'recall_top{q}_lo'):.2f}, {getattr(r, f'recall_top{q}_hi'):.2f}]"
+            L.append(f"{coh + f' ({r.n_pos}/{r.n})' if i == 0 else ''} & {r.model} & {ci(r.ap, r.ap_lo, r.ap_hi, 2)} & {rr(10)} & {rr(20)} & {rr(30)} & {r.ppv10_top20:.2f} & "
+                     f"{r.workload_r95:.0%} [{r.w95_lo:.0%}, {r.w95_hi:.0%}] & {r.workload_r100:.0%} \\\\".replace("%", r"\%"))
+        L.append(r"\midrule")
+    L[-1] = r"\bottomrule"
+    L += [r"\end{tabular}}", r"\end{table*}"]
+    (TAB / "tab_workload.tex").write_text("\n".join(L))
+if (UT / "local_recal_split.csv").exists():
+    ls_ = pd.read_csv(UT / "local_recal_split.csv"); facts["local_recal_split"] = ls_.round(4).to_dict("records")
+    facts["guarantee"] = pd.read_csv(UT / "guarantee.csv").to_dict("records")
+    L = [r"\begin{table}[!htbp]", r"\centering",
+         r"\caption{Local recalibration with a separate calibration sample (independent cohort; 2,000 random splits). Thresholds are set on the calibration sample only and evaluated on all remaining patients. POS: just below the lowest calibration APL score; BOTH: threshold maximizing calibration specificity subject to calibration recall $\geq$0.9. P05: 5th percentile of evaluation recall over splits; P(miss): probability of missing at least one APL patient in the evaluation sample.}",
+         r"\label{tab:recalsplit}", r"\setlength{\tabcolsep}{3pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{llccccccc}", r"\toprule",
+         r"Model & Calibration (APL/AML) & Rule & Recall & P05 & Expected & Spec. & Referred & P(miss) \\", r"\midrule"]
+    for (m, cp_, cn_), g in ls_.groupby(["model", "cal_pos", "cal_neg"], sort=False):
+        for r in g.itertuples():
+            L.append(f"{m} & {cp_}/{cn_} & {r.rule} & {r.recall_mean:.2f} & {r.recall_p05:.2f} & {r.expected_pos_rule:.2f} & {r.spec_mean:.2f} & {r.referred:.2f} & {r.p_any_miss:.2f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
+    (TAB / "tab_recalsplit.tex").write_text("\n".join(L))
+RC = R / "reciprocal_mll_to_apl"
+W_MAN = R.parent / "manifests"
+if (RC / "summary.csv").exists():
+    rs = pd.read_csv(RC / "summary.csv"); NM = {"P1": "Engineered, pooled LR", "P4": "Engineered, attention MIL", "PD": "DinoBloom-S, pooled LR", "PDF": "DinoBloom-S + engineered, pooled LR"}
+    fw = pd.read_csv(R / "mll_patient" / "summary.csv")
+    from sklearn.metrics import roc_auc_score as _ra
+    _pp = pd.read_csv(RC / "predictions.csv"); _coh = pd.read_csv(W_MAN / "apl_aml.csv", keep_default_na=False).groupby("patient_id").cohort.first()
+    def per_period(m):
+        t = _pp[(_pp.model == m) & (_pp["eval"] == "test")].groupby("patient_id").agg(y=("y", "first"), p=("p", "mean"))
+        t["c"] = _coh.loc[t.index].values
+        return {f"rev_{c.lower()}": _ra(g.y, g.p) for c, g in t.groupby("c")}
+    rows = []
+    for m, nm in NM.items():
+        a_ = fw[(fw.model == m) & (fw["eval"] == "test")].iloc[0]; b_ = rs[(rs.model == m) & (rs["eval"] == "test")].iloc[0]
+        rows.append(dict(model=nm, fwd=a_.auroc, fwd_lo=a_.auroc_lo, fwd_hi=a_.auroc_hi, fwd_cv=fw[(fw.model == m) & (fw["eval"] == "cv")].auroc.mean(),
+                         rev=b_.auroc, rev_lo=b_.auroc_lo, rev_hi=b_.auroc_hi, rev_cv=rs[(rs.model == m) & (rs["eval"] == "cv")].auroc.mean(),
+                         rev_sens=b_.sens, rev_fn=b_.fn, rev_spec=b_.spec, **per_period(m)))
+    RT = pd.DataFrame(rows); RT.to_csv(TAB / "reciprocal.csv", index=False); facts["reciprocal"] = RT.round(4).to_dict("records")
+    npos_rev = int(round(RT.rev_sens.iloc[0] * 34 + RT.rev_fn.iloc[0])) if False else 34
+    L = [r"\begin{table}[!t]", r"\centering",
+         r"\caption{Reciprocal cross-laboratory transfer at patient level. Forward: trained on APL-AML Discovery (82 patients), tested on the independent MLL cohort (24 APL, 105 AML). Reverse: trained on the MLL cohort (129 patients; settings and threshold from patient-grouped CV within MLL), tested on all 106 APL-AML patients (34 APL). Dev.: development CV AUROC. Disc./Val.: reverse AUROC within the earlier (82) and later (24) APL-AML patients. Recall and specificity at the source-cohort threshold. The APL-AML cohort had been examined extensively during development, so the reverse direction is exploratory.}",
+         r"\label{tab:reciprocal}", r"\setlength{\tabcolsep}{2.4pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{lcccccc}", r"\toprule",
+         r" & \multicolumn{2}{c}{APL-AML $\rightarrow$ MLL} & \multicolumn{4}{c}{MLL $\rightarrow$ APL-AML (exploratory)} \\", r"\cmidrule(lr){2-3}\cmidrule(lr){4-7}",
+         r"Model & Dev. & External [95\% CI] & Dev. & All 106 [95\% CI] & Disc./Val. & Recall / Spec. \\", r"\midrule"]
+    for r in RT.itertuples():
+        L.append(f"{r.model} & {r.fwd_cv:.3f} & {ci(r.fwd, r.fwd_lo, r.fwd_hi)} & {r.rev_cv:.3f} & {ci(r.rev, r.rev_lo, r.rev_hi)} & {r.rev_discovery:.2f}/{r.rev_validation:.2f} & {r.rev_sens:.2f} / {r.rev_spec:.2f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
+    (TAB / "tab_reciprocal.tex").write_text("\n".join(L)); print(RT.round(3).to_string())
 (TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))

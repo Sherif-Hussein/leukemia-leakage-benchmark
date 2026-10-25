@@ -1,6 +1,6 @@
 \begin{table*}[!t]
 \centering
-\caption{How much of the gap between reported and real performance is due to leakage and how much to dataset shift (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for shift). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). Shift = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC). Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}
+\caption{How much of the gap between reported and real performance is due to leakage and how much to the external generalization gap (cell level, mean over seeds; 95\% CIs of the two components from 500 patient-level bootstrap resamples: paired over development patients for leakage, development and external patients resampled independently for the gap). Leakage = image-level CV AUROC $-$ patient-grouped CV AUROC (same development data, only the split differs). External generalization gap = patient-grouped CV AUROC $-$ external AUROC (new patients; temporal for APL-AML, a held-out subject fold for C-NMC); it mixes all differences between cohorts and is not a causal effect of any single one. Leaky-trained external: external AUROC of the models trained under image-level folds. Recall, specificity and F1 on the external set at the operating point fixed on development data.}
 \label{tab:leakage}
 \setlength{\tabcolsep}{3pt}
 \resizebox{\textwidth}{!}{%
@@ -8,7 +8,7 @@
 \toprule
  & & \multicolumn{4}{c}{AUROC} & \multicolumn{2}{c}{Decomposition of the gap} & \multicolumn{3}{c}{External, fixed operating point} \\
 \cmidrule(lr){3-6}\cmidrule(lr){7-8}\cmidrule(lr){9-11}
-Task & Model & Image CV & Grouped CV & External [95\% CI] & Leaky-trained ext. & Leakage & Shift & Recall & Spec. & F1 \\
+Task & Model & Image CV & Grouped CV & External [95\% CI] & Leaky-trained ext. & Leakage & Ext.\ gap & Recall & Spec. & F1 \\
 \midrule
 T1 APL-AML: diagnosis on cells (patient label) & Engineered + LightGBM & 0.987 & 0.896 & 0.669 [0.495, 0.811] & 0.723 & +0.091 [+0.045, +0.169] & +0.227 [+0.065, +0.432] & 0.69 & 0.55 & 0.54 \\
  & Engineered + LR & 0.938 & 0.895 & 0.658 [0.478, 0.798] & 0.677 & +0.042 [+0.019, +0.077] & +0.237 [+0.073, +0.421] & 0.73 & 0.46 & 0.52 \\

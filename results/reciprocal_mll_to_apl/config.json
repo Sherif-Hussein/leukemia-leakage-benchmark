@@ -1,0 +1,35 @@
+{
+  "manifest": "manifests/apl_mll.csv",
+  "tasks": "/home/claude/leukbench/configs/tasks.json",
+  "task": "apl_patient_mll",
+  "features": [
+    "hand=features/apl_mll_hand.parquet",
+    "dino=features/apl_mll_dinobloom_s.npy"
+  ],
+  "models": [
+    "P1=hand:pool_lr",
+    "P4=hand:abmil",
+    "PD=dino:pool_lr",
+    "PDF=hand+dino:pool_lr"
+  ],
+  "folds": 5,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "cv_where": [
+    "cohort=External_MLL"
+  ],
+  "test_where": [
+    "dataset=apl_aml"
+  ],
+  "max_cells": 200,
+  "epochs": 40,
+  "max_epochs": 40,
+  "threshold": "sens95",
+  "ext_sens": 0.95,
+  "n_boot": 2000,
+  "threads": 1,
+  "out": "results/reciprocal_mll_to_apl"
+}
