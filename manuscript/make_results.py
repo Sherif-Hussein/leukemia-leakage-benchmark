@@ -1277,13 +1277,13 @@ if (RC / "summary.csv").exists():
                          rev_sens=b_.sens, rev_fn=b_.fn, rev_spec=b_.spec, **per_period(m)))
     RT = pd.DataFrame(rows); RT.to_csv(TAB / "reciprocal.csv", index=False); facts["reciprocal"] = RT.round(4).to_dict("records")
     npos_rev = int(round(RT.rev_sens.iloc[0] * 34 + RT.rev_fn.iloc[0])) if False else 34
-    L = [r"\begin{table}[!t]", r"\centering",
+    L = [r"\begin{table*}[!t]", r"\centering",
          r"\caption{Reciprocal cross-laboratory transfer at patient level. Forward: trained on APL-AML Discovery (82 patients), tested on the independent MLL cohort (24 APL, 105 AML). Reverse: trained on the MLL cohort (129 patients; settings and threshold from patient-grouped CV within MLL), tested on all 106 APL-AML patients (34 APL). Dev.: development CV AUROC. Disc./Val.: reverse AUROC within the earlier (82) and later (24) APL-AML patients. Recall and specificity at the source-cohort threshold. The APL-AML cohort had been examined extensively during development, so the reverse direction is exploratory.}",
-         r"\label{tab:reciprocal}", r"\setlength{\tabcolsep}{2.4pt}", r"\resizebox{\columnwidth}{!}{%", r"\begin{tabular}{lcccccc}", r"\toprule",
+         r"\label{tab:reciprocal}", r"\setlength{\tabcolsep}{6pt}", r"\resizebox{0.85\textwidth}{!}{%", r"\begin{tabular}{lcccccc}", r"\toprule",
          r" & \multicolumn{2}{c}{APL-AML $\rightarrow$ MLL} & \multicolumn{4}{c}{MLL $\rightarrow$ APL-AML (exploratory)} \\", r"\cmidrule(lr){2-3}\cmidrule(lr){4-7}",
          r"Model & Dev. & External [95\% CI] & Dev. & All 106 [95\% CI] & Disc./Val. & Recall / Spec. \\", r"\midrule"]
     for r in RT.itertuples():
         L.append(f"{r.model} & {r.fwd_cv:.3f} & {ci(r.fwd, r.fwd_lo, r.fwd_hi)} & {r.rev_cv:.3f} & {ci(r.rev, r.rev_lo, r.rev_hi)} & {r.rev_discovery:.2f}/{r.rev_validation:.2f} & {r.rev_sens:.2f} / {r.rev_spec:.2f} \\\\")
-    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table}"]
+    L += [r"\bottomrule", r"\end{tabular}}", r"\end{table*}"]
     (TAB / "tab_reciprocal.tex").write_text("\n".join(L)); print(RT.round(3).to_string())
 (TAB / "facts.json").write_text(json.dumps(facts, indent=1, default=float))

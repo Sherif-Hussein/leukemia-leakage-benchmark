@@ -1,0 +1,54 @@
+result,reported,rerun,abs_diff
+mll_patient P1 auroc,0.8321428571428572,0.8321428571428572,0.0
+mll_patient P1 sens,0.9583333333333334,0.9583333333333334,0.0
+mll_patient P1 spec,0.1809523809523809,0.1809523809523809,0.0
+mll_patient P4 auroc,0.7051587301587302,0.7051587301587302,0.0
+mll_patient P4 sens,1.0,1.0,0.0
+mll_patient P4 spec,0.0,0.0,0.0
+mll_patient PDF auroc,0.8765873015873016,0.8765873015873016,0.0
+mll_patient PDF sens,1.0,1.0,0.0
+mll_patient PDF spec,0.0476190476190476,0.0476190476190476,0.0
+mll_patient PD auroc,0.8404761904761905,0.8404761904761905,0.0
+mll_patient PD sens,1.0,1.0,0.0
+mll_patient PD spec,0.0380952380952381,0.0380952380952381,0.0
+reciprocal_mll_to_apl P1 auroc,0.7504084967320261,0.7504084967320261,0.0
+reciprocal_mll_to_apl P1 sens,0.4705882352941176,0.4705882352941176,0.0
+reciprocal_mll_to_apl P1 spec,0.8333333333333334,0.8333333333333334,0.0
+reciprocal_mll_to_apl P4 auroc,0.5400326797385621,0.5400326797385621,0.0
+reciprocal_mll_to_apl P4 sens,0.0,0.0,0.0
+reciprocal_mll_to_apl P4 spec,1.0,1.0,0.0
+reciprocal_mll_to_apl PD auroc,0.764297385620915,0.764297385620915,0.0
+reciprocal_mll_to_apl PD sens,0.1176470588235294,0.1176470588235294,0.0
+reciprocal_mll_to_apl PD spec,0.9861111111111112,0.9861111111111112,0.0
+reciprocal_mll_to_apl PDF auroc,0.7761437908496732,0.7761437908496732,0.0
+reciprocal_mll_to_apl PDF sens,0.0588235294117647,0.0588235294117647,0.0
+reciprocal_mll_to_apl PDF spec,1.0,1.0,0.0
+secondary eff_raw_nw ext_auroc,0.6150793650793651,0.6150793650793651,0.0
+secondary eff_raw_nw sens95_sens,0.9166666666666666,0.9166666666666666,0.0
+secondary eff_raw_nw sens95_spec,0.1428571428571428,0.1428571428571428,0.0
+secondary eff_pca64_nw ext_auroc,0.6595238095238095,0.6595238095238095,0.0
+secondary eff_pca64_nw sens95_sens,0.75,0.75,0.0
+secondary eff_pca64_nw sens95_spec,0.4666666666666667,0.4666666666666667,0.0
+fine-tuned CNN (cell) ext_auroc,0.5927387053571429,0.5927387053571429,0.0
+fine-tuned CNN (cell) ext_sens,0.9804166666666668,0.9804166666666668,0.0
+fine-tuned CNN (cell) ext_spec,0.0527619047619047,0.0527619047619047,0.0
+fine-tuned CNN (patient) ext_auroc,0.7373015873015873,0.7373015873015873,0.0
+fine-tuned CNN (patient) ext_sens,1.0,1.0,0.0
+fine-tuned CNN (patient) ext_spec,0.0666666666666666,0.0666666666666666,0.0
+primary ensemble ext_auroc,0.8621031746031745,0.8621031746031745,0.0
+primary ensemble sens,1.0,1.0,0.0
+primary ensemble spec,0.0,0.0,0.0
+workload Independent (MLL) Primary pipeline recall_top20,0.625,0.625,0.0
+workload Independent (MLL) Primary pipeline workload_r95,0.6046511627906976,0.6046511627906976,0.0
+workload Independent (MLL) DinoBloom + engineered recall_top20,0.7083333333333334,0.7083333333333334,0.0
+workload Independent (MLL) DinoBloom + engineered workload_r95,0.751937984496124,0.751937984496124,0.0
+"workload Independent (MLL) Engineered, pooled LR recall_top20",0.5833333333333334,0.5833333333333334,0.0
+"workload Independent (MLL) Engineered, pooled LR workload_r95",0.6124031007751938,0.6124031007751938,0.0
+workload Independent (MLL) Fine-tuned CNN recall_top20,0.375,0.375,0.0
+workload Independent (MLL) Fine-tuned CNN workload_r95,0.7829457364341085,0.7829457364341085,0.0
+workload APL-AML later cohort Primary pipeline recall_top20,0.3333333333333333,0.3333333333333333,0.0
+workload APL-AML later cohort Primary pipeline workload_r95,0.75,0.75,0.0
+workload APL-AML later cohort DinoBloom + engineered recall_top20,0.3333333333333333,0.3333333333333333,0.0
+workload APL-AML later cohort DinoBloom + engineered workload_r95,0.7083333333333334,0.7083333333333334,0.0
+"workload APL-AML later cohort DinoBloom, attention MIL recall_top20",0.3333333333333333,0.3333333333333333,0.0
+"workload APL-AML later cohort DinoBloom, attention MIL workload_r95",0.6666666666666666,0.6666666666666666,0.0

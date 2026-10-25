@@ -1,28 +1,21 @@
 digraph G {
-  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=10, nodesep=0.25, ranksep=0.28, margin=0.05];
-  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=9, width=2.2];
-  edge  [color="#5B6575", arrowsize=0.6];
-  raw1  [label="APL-AML (CellaVision DM100)\n106 patients, 25,724 JPEG cells\n~360 x 363 px, Wright stain", fillcolor="#DCE6F5"];
-  raw2  [label="C-NMC 2019\n73 subjects, 10,661 BMP cells\n450 x 450 px, black background", fillcolor="#DCE6F5"];
-  man   [label="Manifest: path, patient, cohort,\ndiagnosis, cell type"];
-  qc    [label="Quality control\nunreadable files kept as missing rows\n(imputed later inside the training fold)"];
-  split [label="External sets fixed before any analysis\nAPL-AML: Discovery 82 | Validation 24 (by date)\nC-NMC: folds 0-1 (42) | fold 2 (31)\nexternal sets never used for fitting", fillcolor="#FCEBD0"];
-  task  [label="Tasks\nT1 diagnosis on cells | T2 blast | T3 patient (APL-AML)\nT4 cells | T5 subject (C-NMC)"];
-  subgraph cluster_a { label="Engineered branch"; fontsize=9; color="#9AA4B2"; style=dashed;
-    bg  [label="C-NMC only: black background\nset to white"];
-    rs1 [label="Resize 192 x 192 (bilinear)"];
-    hed [label="Colour deconvolution (H, E, D)\nGaussian smoothing of H"];
-    seg [label="Nucleus: Otsu on H + opening +\ncentral component\nCytoplasm proxies: basophilic region\n+ perinuclear ring (2-9 px)"];
-    fe  [label="93 features: shape, stain/colour,\nGLCM, entropy, LBP, nucleoli/granules"];
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.2, ranksep=0.22, margin=0.03];
+  node  [shape=box, style="rounded,filled", fillcolor="#F2F4F7", color="#5B6575", fontname="DejaVu Sans", fontsize=13, margin="0.08,0.04"];
+  edge  [color="#5B6575", arrowsize=0.7];
+  raw  [label="Single-cell images\nAPL-AML | C-NMC | MLL", fillcolor="#DCE6F5"];
+  man  [label="Manifest + quality control\n(unreadable = missing)"];
+  split[label="External sets fixed first\n(never used for fitting)", fillcolor="#FCEBD0"];
+  shift[label="Label-free shift test", fillcolor="#FCEBD0"];
+  subgraph cluster_a { label="Engineered"; fontsize=13; color="#9AA4B2"; style=dashed;
+    seg [label="Nucleus + cytoplasm\nsegmentation"];
+    fe  [label="93 features"];
   }
-  subgraph cluster_b { label="Deep branch"; fontsize=9; color="#9AA4B2"; style=dashed;
-    rs2 [label="Resize 224 x 224 (bicubic)\nImageNet mean/std normalisation"];
-    enc [label="Frozen EfficientNet-B0\n1,280-d embedding per cell"];
-    cache [label="Fine-tuning: frozen stages 1-5\n112 x 14 x 14 maps cached once"];
+  subgraph cluster_b { label="Deep"; fontsize=13; color="#9AA4B2"; style=dashed;
+    mac [label="Macenko\n(if shift)"];
+    cnn [label="EfficientNet-B0\nor DinoBloom-S"];
   }
-  fold [label="Inside each training fold only:\nmedian imputation, scaling, PCA (natural scale),\nclass weighting, threshold; patient bags of up to 500 cells", fillcolor="#FCEBD0"];
-  raw1 -> man; raw2 -> man; man -> qc -> split -> task;
-  task -> bg -> rs1 -> hed -> seg -> fe;
-  task -> rs2; rs2 -> enc; rs2 -> cache;
-  fe -> fold; enc -> fold; cache -> fold;
+  fold [label="Inside training folds only:\nimputation, scaling, PCA,\nthreshold (recall >= 0.95)", fillcolor="#FCEBD0"];
+  raw -> man -> split -> shift;
+  split -> seg -> fe -> fold;
+  shift -> mac -> cnn -> fold;
 }

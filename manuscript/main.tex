@@ -32,7 +32,7 @@
 \maketitle
 
 \begin{abstract}
-Blood-smear leukemia classifiers often report 97--100\% accuracy, yet few are used in practice. We separated three questions---discrimination, fixed-threshold performance and review workload---in 106 patients with acute myeloid leukemia (34 with acute promyelocytic leukemia, APL) split by diagnosis date, C-NMC 2019 (73 subjects; lymphoblastic leukemia), and a prespecified evaluation on an independent cohort from another laboratory (24 APL, 105 other AML). Image-level cross-validation (CV) yielded accuracy of up to 95\%, whereas accuracy on new patients ranged from 69\% to 90\% depending on task and model. For the task in which each cell inherited its patient's diagnosis, image-level CV inflated the area under the ROC curve (AUROC) by 0.04--0.11 relative to patient-grouped CV, and the external generalization gap to the later APL cohort was a further 0.17--0.24; scan time was confounded with APL in the development data. A prespecified pipeline trained on 82 patients ranked APL patients in the independent laboratory with an AUROC of 0.86 (95\% CI 0.77--0.94); a hematology foundation model combined with engineered features reached 0.88. At the development threshold, all 24 APL patients were detected at a specificity of 0.00. When patients were ranked by model score, referring the top 20\% captured 15--17 of the 24 APL patients, and capturing 95\% required reviewing 60--75\% of patients. In an exploratory reverse-transfer analysis, pooled-feature models reached AUROCs of 0.75--0.78, attention-based multiple instance learning did not transfer, and thresholds again failed. Patient-grouped and external validation are necessary but not sufficient; these models are candidates for prioritization research, not validated screening tools.
+Blood-smear leukemia classifiers often report 97--100\% accuracy, yet few are used in practice. We separated three questions---discrimination, fixed-threshold performance and review workload---in 106 patients with acute myeloid leukemia (34 with acute promyelocytic leukemia, APL) split by diagnosis date, C-NMC 2019 (73 subjects; lymphoblastic leukemia versus normal B cells), and a prespecified evaluation on an independent cohort from another laboratory (24 APL, 105 other AML). Image-level cross-validation (CV) yielded up to 95\% accuracy; new patients, 69--90\%, depending on task and model. For the task in which each cell inherited its patient's diagnosis, image-level CV inflated the area under the ROC curve (AUROC) by 0.04--0.11 relative to patient-grouped CV, and the external generalization gap to the later APL cohort was a further 0.17--0.24; an acquisition-order proxy was strongly associated with APL in the development cohort, suggesting a possible scan-time confounder. A prespecified pipeline trained on 82 patients ranked APL patients in the independent laboratory with an AUROC of 0.86 (95\% CI 0.77--0.94); a hematology foundation model plus engineered features reached 0.88. At the development threshold, all 24 APL patients were detected at a specificity of 0.00. Referring the top-ranked 20\% of patients captured 15--17 of 24 APL patients; capturing 95\% required reviewing 60--75\%. In an exploratory reverse-transfer analysis, pooled-feature models reached AUROCs of 0.75--0.78, attention-based multiple instance learning did not transfer, and thresholds again failed. Patient-grouped and external validation are necessary but not sufficient; these models are candidates for prioritization research, not validated screening tools.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -66,27 +66,26 @@ Table~\ref{tab:survey} summarizes representative studies and the open question e
 
 \begin{table*}[!t]
 \centering
-\caption{Representative previous studies (results as reported; not comparable across datasets) and the open question each leaves, with the contribution of this paper (C1--C5) that addresses it.}
+\caption{Representative previous studies (results as reported; not comparable across datasets or targets) and the open question each leaves, with the contribution of this paper (C1--C5) that addresses it.}
 \label{tab:survey}
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.05}
-\footnotesize
-\begin{tabular}{p{2.3cm}p{2.5cm}p{2.7cm}p{2.8cm}p{2.4cm}p{4.15cm}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.1}
+\small
+\begin{tabular}{p{3.0cm}p{3.6cm}p{3.6cm}p{2.6cm}p{4.6cm}}
 \toprule
-Study & Data & Method & Evaluation & Reported result & Open question (addressed by) \\
+Study & Data & Evaluation & Reported & Open question (C) \\
 \midrule
-Prellberg \& Kramer, 2019 \cite{prellberg2019cnmc} & C-NMC, ALL vs.\ normal cells & ResNeXt with squeeze-excitation & Challenge test set, unseen subjects & Weighted F1 0.889 & Cell level only; missed cases and calibration not reported (C3, C5) \\
-Mondal \emph{et al.}, 2021 \cite{mondal2021ensemble} & C-NMC & Ensemble of five CNNs & Preliminary test set, 28 subjects & F1 0.886; AUC 0.941 & Cell level only; ensemble cost (C3, C5) \\
-Kasim \emph{et al.}, 2025 \cite{kasim2025multiclass} & ALL-IDB2 + AML-LMU, 390 cells & CNN features + SVM/XGBoost & Image-level split & Accuracy 0.88 (3 classes) & Class and source coincide (C1, C2) \\
-Jammal \& Dahab, 2025 \cite{jammal2025causalformer} & C-NMC & CNN--ViT, causal reasoning & Split unit not reported & Accuracy 1.00 & Transfer to new patients unknown (C1, C2) \\
-Jammal \emph{et al.}, 2025 \cite{jammal2025neurobridge} & ALL image; C-NMC & Neuro-symbolic ViT & 5-fold CV, split unit not reported & Accuracy 1.00; 0.97 & Transfer to new patients unknown (C1, C2) \\
-Albzour, 2026 \cite{albzour2026leakage} & C-NMC & ML, CNN and ViT benchmark & Subject-disjoint & AUROC 0.913 & One cell-level label; leakage not separated from shift (C1, C5) \\
-Hehr \emph{et al.}, 2023 \cite{hehr2023scemila} & 189 patients, 4 AML subtypes & Attention MIL & Patient-level CV & Subtype identification & Single laboratory; operating point not reported (C2, C3) \\
-Sidhom \emph{et al.}, 2021 \cite{sidhom2021apl} & APL-AML, 106 patients (\emph{this cohort}) & Single-cell CNN + MIL & Temporal validation, reader study & Single-cell AUC 0.890 $\rightarrow$ 0.743 & Missed APL patients and calibration not reported (C3) \\
-Manescu \emph{et al.}, 2023 \cite{manescu2023apl} & APL-AML (\emph{this cohort}) and others & Annotation-free MIL (VGG-19) & Random 3-fold CV & AUC 0.96 & Random rather than temporal split (C1, C2) \\
-de Almeida \emph{et al.}, 2023 \cite{dealmeida2023haemorasis} & 352 + 63 slides & Engineered morphometry + MIL & CV and external cohort & Up to 0.90 AUC (MDS) & Not applied to acute leukemia (C4) \\
-Koch \emph{et al.}, 2024 \cite{koch2024dinobloom} & 13 datasets, 380k cells & DINOv2 foundation model & Linear probing, MIL & Outperforms generic encoders & Patient-level external evaluation open (C2, C5) \\
-Dasdelen \emph{et al.}, 2026 \cite{dasdelen2026caitomorph} & 6,610 individuals; external incl.\ this cohort & DinoBloom + transformer MIL & Two external sets & Malignancy AUC 0.97 & Needs large cohort and GPU (C5) \\
+Prellberg \& Kramer 2019 \cite{prellberg2019cnmc} & C-NMC cells & Unseen subjects & F1 0.889 & Missed cases, calibration (C3) \\
+Mondal \emph{et al.} 2021 \cite{mondal2021ensemble} & C-NMC cells & Unseen subjects & AUC 0.941 & Operating point, cost (C3, C5) \\
+Kasim \emph{et al.} 2025 \cite{kasim2025multiclass} & 390 cells, 2 sources & Image-level split & Acc.\ 0.88 & Class = source (C1, C2) \\
+Jammal \emph{et al.} 2025 \cite{jammal2025causalformer,jammal2025neurobridge} & C-NMC, ALL-IDB & Split unit unclear & Acc.\ 0.97--1.00 & New patients? (C1, C2) \\
+Albzour 2026 \cite{albzour2026leakage} & C-NMC cells & Subject-disjoint & AUROC 0.913 & Leakage vs.\ gap (C1) \\
+Hehr \emph{et al.} 2023 \cite{hehr2023scemila} & 189 patients, AML subtypes & Patient CV & Subtyping & External site, threshold (C2, C3) \\
+Sidhom \emph{et al.} 2021 \cite{sidhom2021apl} & APL-AML (\emph{this cohort}) & Temporal; reader study & AUC 0.743 & Missed patients (C3) \\
+Manescu \emph{et al.} 2023 \cite{manescu2023apl} & APL-AML and others & Random 3-fold CV & AUC 0.96 & Temporal split (C1, C2) \\
+de Almeida \emph{et al.} 2023 \cite{dealmeida2023haemorasis} & 352 + 63 slides & External cohort & AUC $\le$0.90 & Acute leukemia (C4) \\
+Koch \emph{et al.} 2024 \cite{koch2024dinobloom} & 380k cells, 13 sets & Probing, MIL & Beats generic & Patient-level external (C2) \\
+Dasdelen \emph{et al.} 2026 \cite{dasdelen2026caitomorph} & One laboratory, 6,610 individuals & Two external sets & Malignancy AUC 0.97 & APL vs.\ AML, threshold (C3, C5) \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -183,7 +182,7 @@ Before the final analysis we fixed one primary and one secondary pipeline (Fig.~
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{fig_pipelines.pdf}
-\caption{End-to-end pipelines from the single-cell images of a patient to the decision, with the setting and measured cost of each step (500 cells per patient, 2 vCPUs). Orange: steps fixed on development data. Green: components retained because they improved performance (primary) or reduced complexity (secondary).}
+\caption{End-to-end pipelines from the single-cell images of a patient to the decision. Orange: fixed on development data; green: components retained because they improved performance (primary) or reduced complexity (secondary). Measured cost per cell on 2 vCPUs: Macenko normalization 0.071\,s, CNN 0.051\,s, engineered features 0.038\,s (500 cells per patient); settings in Table~\ref{S-tab:hparams}.}
 \label{fig:pipelines}
 \end{figure}
 
@@ -367,8 +366,12 @@ Fourth, discrimination, threshold transport and clinical workload are separate q
 \section{Conclusion}
 Reported accuracy for leukemia detection from blood smears depends strongly on how the evaluation is set up: splitting cells instead of patients inflated performance and, above all, the expected recall, and a temporal external generalization gap and a scan-time confounder accounted for most of the remaining optimism on the APL cohort. Patient-grouped evaluation and external validation are necessary but not sufficient for clinical translation of blood-smear leukemia classifiers. In this study, models retained moderate-to-good patient-ranking performance across time and laboratories (AUROC 0.81--0.88 for APL), whereas thresholds selected during development failed to maintain an acceptable false-positive burden, and the ranking alone reduced the review workload only modestly at a high sensitivity target. The findings support these methods as candidates for sensitivity-oriented prioritization research, and show the need for independent local calibration on positive and negative cases, workload-aware evaluation and prospective validation before clinical deployment. We recommend that studies in this area split data by patient, separate leakage from the external generalization gap, test for acquisition shift and confounding, and report discrimination, fixed-threshold performance and workload separately.
 
+\section*{Declaration of Generative AI Use}
+% DRAFT -- the authors must confirm or edit this statement to match the target journal's policy.
+During this work the authors used an AI assistant (Claude, Anthropic) to write and run analysis code, to prepare figures and tables, and to draft and edit the manuscript text, under the authors' direction. The authors reviewed and verified the code, the results and the text, and take full responsibility for the content of this publication.
+
 \section*{Data and Code Availability}
-The APL-AML cohort is available at \url{https://github.com/sidhomj/DeepAPL}; C-NMC 2019 \cite{mourya2019cnmcdata} and AML-Cytomorphology\_MLL\_Helmholtz \cite{hehr2023scemila} from The Cancer Imaging Archive; DinoBloom weights from the authors' Zenodo release \cite{koch2024dinobloom}. Code, configuration files, the commands that produced every result (\texttt{reproduce.sh}), locked patient-level split files, patient-level predictions of all reported pipelines on every external cohort, both pre-specifications and the analysis registry are available at \url{https://github.com/Sherif-Hussein/leukemia-leakage-benchmark} The exact version used for this paper is the branch \texttt{paper-v4}; \texttt{PROVENANCE.md} lists, with commit identifiers and times, when each analysis was added and what each test set had been exposed to, and \texttt{verify\_claims.py} recomputes the main external results from the released predictions.
+The APL-AML cohort is available at \url{https://github.com/sidhomj/DeepAPL}; C-NMC 2019 \cite{mourya2019cnmcdata} and AML-Cytomorphology\_MLL\_Helmholtz \cite{hehr2023scemila} from The Cancer Imaging Archive; DinoBloom weights from the authors' Zenodo release \cite{koch2024dinobloom}. Code, configuration files, the commands that produced every result (\texttt{reproduce.sh}), locked patient-level split files, patient-level predictions of all reported pipelines on every external cohort, both pre-specifications and the analysis registry are available at \url{https://github.com/Sherif-Hussein/leukemia-leakage-benchmark} The exact version used for this paper is the branch \texttt{paper-v4}; \texttt{PROVENANCE.md} lists, with commit identifiers and times, when each analysis was added and what each test set had been exposed to, \texttt{verify\_claims.py} recomputes the main external results from the released predictions, and a clean re-run of all analyses on the independent cohort and of the reverse transfer reproduced all 53 compared numbers exactly (\texttt{REPRODUCIBILITY.md}).
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
