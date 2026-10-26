@@ -15,7 +15,8 @@ All times are Cairo time (UTC+03:00). Commit identifiers refer to branch `revisi
 | 2026-10-21 19:41 | `acf173b` | **Pre-specification of the independent MLL test** (`docs/PRESPEC_EXTERNAL_MLL.md`), DinoBloom loader | MLL cohort downloaded and extracted, **not scored** |
 | 2026-10-22 05:41 | `7fce3d4` | Independent MLL test (scored once), DinoBloom on C-NMC, APL-AML and MLL, SHAP, C-NMC improvement pilot | MLL: confirmatory analysis per plan |
 | 2026-10-25 21:24 | `1bc8d45` | Workload analysis, split-sample threshold adaptation, reverse transfer (train MLL, test APL-AML), release files | Post hoc on MLL scores (no model changed); reverse transfer exploratory (APL-AML previously examined) |
-| 2026-10-25 | final commit of `revision-1` | Documentation reconciled with the manuscript (`README.md`, `PROVENANCE.md`, `SETTINGS.md`), `reproduce.sh`, `verify_claims.py`, wording and figure fixes | No new analyses |
+| 2026-10-25 21:56 | `d6b8cd8` | Documentation reconciled with the manuscript (`README.md`, `PROVENANCE.md`, `SETTINGS.md`), `reproduce.sh`, `verify_claims.py`, wording and figure fixes | No new analyses |
+| 2026-10-25 | **`739c33f8f083e6836a42e234395baf43630a6763`** | **Code and results freeze cited in the manuscript.** Clean-room reproduction check (53/53 identical), figure and wording fixes | No new analyses |
 
 ## Statements superseded
 
@@ -38,3 +39,5 @@ All times are Cairo time (UTC+03:00). Commit identifiers refer to branch `revisi
 | Threshold adaptation on separate patients | `results/utility/local_recal_split.csv`, `results/mll_recal` | `run_utility.py`, `run_local_recal_ext.py` |
 | Reverse transfer (0.75-0.78; MIL 0.54) | `results/reciprocal_mll_to_apl` | `run_patient_benchmark.py` |
 | DinoBloom on C-NMC and APL-AML | `results/cnmc_cell_dino`, `cnmc_patient_dino`, `apl_patient_dino` | `extract_embeddings.py`, benchmarks |
+
+Later commits on `paper-v4` change only the compiled manuscript (to insert this commit identifier) and documentation.
